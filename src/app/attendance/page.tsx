@@ -3,6 +3,7 @@ export default function AttendancePage() {
       { name: 'Mathematics', total: 40, attended: 35, percentage: 87.5 },
       { name: 'Physics', total: 38, attended: 30, percentage: 78.9 },
       { name: 'Chemistry', total: 42, attended: 38, percentage: 90.5 },
+      { name: 'English', total: 42, attended: 38, percentage: 90.5 }
     ]
   
     return (
