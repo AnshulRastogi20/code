@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { usePathname } from 'next/navigation'
+import { Settings } from 'lucide-react'
 
 export function Navbar() {
   const pathname = usePathname()
@@ -18,7 +19,7 @@ export function Navbar() {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex gap-4">
           <Link 
-            href="/"
+            href="schedule"
             className={`text-sm ${pathname === '/' ? 'text-white' : 'text-white/70 hover:text-white'}`}
           >
             Schedule
@@ -32,13 +33,16 @@ export function Navbar() {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="border-white/10 text-white">
-              Profile
+            
+            <Button variant="outline" className="border-white/10 text-black">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Update Timetable</DropdownMenuItem>
-            <DropdownMenuItem>Choose Preset</DropdownMenuItem>
+            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem>Exchange Periods</DropdownMenuItem>
+            <DropdownMenuItem>Mark as Holiday</DropdownMenuItem>
             <DropdownMenuItem>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
