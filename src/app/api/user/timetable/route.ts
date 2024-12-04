@@ -2,9 +2,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { connectDB } from '@/lib/db';
-import { User } from '@/models/User';
 import { Preset } from '@/models/Preset';
 import { Timetable } from '@/models/Timetable';
+import mongoose from 'mongoose';
+import { User } from '@/models/User';
 
 export async function GET() {
   try {
@@ -12,9 +13,11 @@ export async function GET() {
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
+    const user = session?.user;
+    const userId = new mongoose.Types.ObjectId(user._id);
+    console.log('userid - ' ,userId)
     await connectDB();
-    const timetable = await Timetable.findOne({ userId: session.user.email });
+    const timetable = await Timetable.findOne({ userId: userId});
     
     if (!timetable) {
       return NextResponse.json({ error: 'No timetable found' }, { status: 404 });

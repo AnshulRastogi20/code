@@ -3,10 +3,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { connectDB } from '@/lib/db';
 import { Preset } from '@/models/Preset';
+import { seedPresets } from '@/app/scripts/seed-preset';
 
 export async function GET() {
   try {
-    await connectDB();
+    await seedPresets()
+    console.log("here in route.ts")
     const presets = await Preset.find();
     return NextResponse.json(presets);
   } catch (error) {

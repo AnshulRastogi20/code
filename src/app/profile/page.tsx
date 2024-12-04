@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Preset } from '@/types'
+import {toast} from 'react-hot-toast'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Select,
@@ -10,16 +12,47 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import axios from 'axios'
+import { useTimetable } from '@/hooks/useAppData'
 
 export default function ProfilePage() {
-    const [selectedPreset, setSelectedPreset] = useState('')
 
-    // Example presets - replace with your actual presets
-    const presets = [
-        { id: '1', name: 'Default Schedule' },
-        { id: '2', name: 'Morning Schedule' },
-        { id: '3', name: 'Evening Schedule' },
-    ]
+
+    const [selectedPreset, setSelectedPreset] = useState('')
+     const [presetState, setPreset] = useState<Preset[]>()
+    
+    useEffect(() => {
+        // Fetch presets from API
+        const fetchPresets = async () => {
+            try {
+                const response = await axios.get('/api/preset')
+                console.log(response)
+                setPreset(response.data.map((preset: Preset)=> ({
+                    id: preset.id,
+                    name: preset.name
+                })))
+            } catch (error) {
+                console.error('Failed to fetch presets:', error)
+            }
+        }
+
+        fetchPresets()
+    }, [])
+
+
+const { timetable, presets, applyPreset } = useTimetable();
+
+  const handleApplyPreset = async (presetId: string) => {
+    try {
+      await applyPreset.mutateAsync(presetId);
+      toast.success('Timetable updated');
+    } catch {
+      toast.error('Failed to update timetable');
+    }
+  };
+
+
+
 
     return (
         <div className="container mx-auto px-4 py-6">
@@ -59,15 +92,15 @@ export default function ProfilePage() {
                                 <SelectValue placeholder="Select a preset timetable" />
                             </SelectTrigger>
                             <SelectContent>
-                                {presets.map((preset) => (
-                                    <SelectItem key={preset.id} value={preset.id}>
-                                        {preset.name}
+                                {presetState?.map((presetState:Preset , index) => (
+                                    <SelectItem key={index} value={presetState.id}>
+                                        {presetState.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                         <Button 
-                            onClick={() => console.log('Applied preset:', selectedPreset)}
+                            onClick={() => handleApplyPreset(selectedPreset)}
                             className="w-full mt-4"
                             disabled={!selectedPreset}
                         >

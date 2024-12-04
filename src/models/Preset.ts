@@ -6,13 +6,12 @@ const periodSchema = new mongoose.Schema({
   startTime: String,
   endTime: String,
   teacher: String,
-  room: String
 });
 
 const dayScheduleSchema = new mongoose.Schema({
   day: {
     type: String,
-    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    // enum: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
   },
   periods: [periodSchema]
 });
