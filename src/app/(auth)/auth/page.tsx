@@ -15,14 +15,9 @@ export default function AuthPage() {
                         onClick={() => router.push('/sign-in')}
                         className="w-full px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-300 transform hover:scale-105"
                     >
-                        Sign In
+                        Sign In with Google
                     </button>
-                    <button
-                        onClick={() => router.push('/sign-up')}
-                        className="w-full px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors duration-300 transform hover:scale-105"
-                    >
-                        Sign Up
-                    </button>
+                    
                 </div>
             </div>
         </div>

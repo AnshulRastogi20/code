@@ -4,7 +4,7 @@ import { Preset } from '@/models/Preset';
 
 const defaultPresets = [
   {
-    name: 'TEST',
+    name: 'COLLEGE',
     description: 'Classes from 9:15 AM to 3:45 PM',
     schedule: [
         {
@@ -351,9 +351,29 @@ const defaultPresets = [
 ];
 
 export async function seedPresets() {
-  await connectDB();
-  await Preset.deleteMany({ isDefault: true });
-  await Preset.insertMany(defaultPresets);
-  console.log('Default presets seeded successfully');
+  try {
+    await connectDB();
+    
+    // Check if default preset already exists
+    const existingPreset = await Preset.findOne({ 
+      name: defaultPresets[0].name,
+      isDefault: true 
+    });
+
+    if (existingPreset) {
+      console.log('Default preset already exists, skipping seed');
+      return;
+    }
+
+    // Only delete and insert if no default preset exists
+    console.log('No default preset found, seeding...');
+    await Preset.deleteMany({ isDefault: true });
+    await Preset.insertMany(defaultPresets);
+    console.log('Default presets seeded successfully');
+    
+  } catch (error) {
+    console.error('Error seeding presets:', error);
+    throw error;
+  }
 }
 

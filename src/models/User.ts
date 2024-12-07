@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
   image: String,
   googleId: String,
   timetableId: { type: mongoose.Schema.Types.ObjectId, ref: 'Timetable' },
-  selectedPreset: { type: mongoose.Schema.Types.ObjectId, ref: 'Preset' }
+  selectedPreset: { type: mongoose.Schema.Types.String, ref: 'Preset' }
 }, { timestamps: true });
 
 export const User = mongoose.models.User || mongoose.model('User', userSchema);

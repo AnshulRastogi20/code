@@ -11,7 +11,6 @@ const periodSchema = new mongoose.Schema({
 const dayScheduleSchema = new mongoose.Schema({
   day: {
     type: String,
-    // enum: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
   },
   periods: [periodSchema]
 });

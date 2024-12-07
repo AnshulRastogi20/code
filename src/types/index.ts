@@ -23,7 +23,7 @@ export interface User {
   }
 
   export interface Preset {
-    id:string;
+    _id:string;
     name: string;
     description?: string;
     schedule: {

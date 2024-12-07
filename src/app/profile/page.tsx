@@ -18,37 +18,54 @@ import { useTimetable } from '@/hooks/useAppData'
 export default function ProfilePage() {
 
 
-    const [selectedPreset, setSelectedPreset] = useState('')
-     const [presetState, setPreset] = useState<Preset[]>()
+    const [selectedPreset, setSelectedPreset] = useState<string>('')
+  const [presets, setPresets] = useState<Preset[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  
+  const { applyPreset } = useTimetable()
+
+  useEffect(() => {
+    let mounted = true
     
-    useEffect(() => {
-        // Fetch presets from API
-        const fetchPresets = async () => {
-            try {
-                const response = await axios.get('/api/preset')
-                console.log(response)
-                setPreset(response.data.map((preset: Preset)=> ({
-                    id: preset.id,
-                    name: preset.name
-                })))
-            } catch (error) {
-                console.error('Failed to fetch presets:', error)
-            }
+    const fetchPresets = async () => {
+      try {
+        setIsLoading(true)
+        const response = await axios.get<Preset[]>('/api/presets')
+        
+        if (mounted) {
+          setPresets(response.data.map(presets => ({
+            _id: presets._id,
+            name: presets.name,
+            schedule: presets.schedule,
+            createdBy: presets.createdBy
+          })))
         }
+      } catch (error) {
+        console.error('Failed to fetch presets:', error)
+        toast.error('Failed to load presets')
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
+      }
+    }
 
-        fetchPresets()
-    }, [])
-
-
-const { timetable, presets, applyPreset } = useTimetable();
+    fetchPresets()
+    
+    return () => {
+      mounted = false
+    }
+  }, []) // Remove setSelectedPreset from deps
 
   const handleApplyPreset = async (presetId: string) => {
     try {
-      await applyPreset.mutateAsync(presetId);
-      toast.success('Timetable updated');
-    } catch {
-      toast.error('Failed to update timetable');
+      await applyPreset.mutateAsync(presetId)
+      toast.success('Timetable updated')
+    } catch (error) {
+      console.error('Failed to apply preset:', error)
+      toast.error('Failed to update timetable')
     }
+  
   };
 
 
@@ -92,9 +109,9 @@ const { timetable, presets, applyPreset } = useTimetable();
                                 <SelectValue placeholder="Select a preset timetable" />
                             </SelectTrigger>
                             <SelectContent>
-                                {presetState?.map((presetState:Preset , index) => (
-                                    <SelectItem key={index} value={presetState.id}>
-                                        {presetState.name}
+                                {presets?.map((preset:Preset , index) => (
+                                    <SelectItem key={index} value={preset._id}>
+                                        {preset.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
