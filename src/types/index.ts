@@ -7,14 +7,15 @@ export interface User {
   }
   
   export interface Period {
-    _id: string;
     subject: string;
     startTime: string;
     endTime: string;
+    teacher: string;
     attended?: boolean;
     disabled?: boolean;
     topicsCovered?: string;
   }
+  
   
   export interface DaySchedule {
     date: Date;

@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import axios from 'axios'
 import { useTimetable } from '@/hooks/useAppData'
+import { PresetCreationDrawer } from "@/components/PresetCreationDrawer"
 
 export default function ProfilePage() {
 
@@ -84,12 +85,7 @@ export default function ProfilePage() {
                         <p className="text-sm text-gray-500 mb-4">
                             Create and customize your own timetable according to your schedule.
                         </p>
-                        <Button 
-                            onClick={() => window.location.href = '/profile/set-timetable'}
-                            className="w-full"
-                        >
-                            Create New Timetable
-                        </Button>
+                        <PresetCreationDrawer />
                     </CardContent>
                 </Card>
 
