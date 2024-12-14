@@ -3,6 +3,7 @@ import NextAuth, { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
+import mongoose from 'mongoose';
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -23,29 +24,38 @@ export const authOptions: AuthOptions = {
       const existingUser = await User.findOne({ email: user.email });
       
       if (!existingUser) {
-        await User.create({
+        const newUser = await User.create({
           email: user.email,
           name: user.name,
           image: user.image,
         });
+        user._id = newUser._id.toString();
+      } else {
+        user._id = existingUser._id.toString();
       }
       
       return true;
     },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user._id = token.sub!; // Add non-null assertion since we know token.sub will exist
-      }
-      return session;
-    },
     async jwt({ token, user }) {
       if (user) {
-        token.sub = user.id;
+        token._id = user._id?.toString();
+        token.email = user.email;
+        token.name = user.name;
       }
       return token;
+    },
+    async session({ session, token }) {
+      if (token) {  
+        session.user._id = token._id; 
+        session.user.email = token.email;
+        session.user.name = token.name;
+      }
+      return session;
     },
   },
 };
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
+
+

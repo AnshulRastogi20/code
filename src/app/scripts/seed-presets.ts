@@ -345,6 +345,7 @@ const defaultPresets = [
           }
       // ... more days
     ],
+    createdBy: 'DEFAULT',
     isDefault: true
   }
   // ... more presets

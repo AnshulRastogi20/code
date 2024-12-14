@@ -1,16 +1,33 @@
-// types/next-auth.d.ts
-import NextAuth from 'next-auth';
-import { DefaultSession, DefaultUser } from 'next-auth';
+import 'next-auth';
+import { DefaultSession } from 'next-auth';
+import mongoose from 'mongoose';
 
 declare module 'next-auth' {
   interface Session {
     user: {
       _id: string;
-    } & DefaultSession['user'];
+      email: string;
+      name: string;
+      image: string;
+      googleId?: string;
+    }& DefaultSession['user']
   }
 
   interface User extends DefaultUser {
     _id: string;
+    email: string;
+    name: string;
+    image: string;
     googleId: string;
+  }
+} 
+
+declare module 'next-auth/jwt'{
+  interface JWT{
+    _id: string;
+    email: string;
+    name: string;
+    image: string;
+    googleId?: string;
   }
 }

@@ -24,7 +24,7 @@ export interface User {
   }
 
   export interface Preset {
-    _id:string;
+    _id: string;
     name: string;
     description?: string;
     schedule: {

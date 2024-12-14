@@ -12,18 +12,22 @@ export async function GET() {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
+    console.log('session or user:', session);
     
+
     if (!session?.user?.email) {
       console.log('No session or user:', session);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const dbUser = await User.findOne({ email: session.user.email });
+    console.log("email - ", session.user.email)
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found in database' }, { status: 409 });
     }
 
     const userId = new mongoose.Types.ObjectId(dbUser._id);
+    console.log(userId)
     const timetable = await Timetable.findOne({ userId: userId});
     
     if (!timetable) {
@@ -41,6 +45,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
+    console.log('session or user:', session);
     
     if (!session?.user?.email) {
       console.log('No session or user:', session);
