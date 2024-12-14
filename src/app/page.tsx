@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-export default async function Home() {
+export default function Home() {
   const router = useRouter();
 
   return (

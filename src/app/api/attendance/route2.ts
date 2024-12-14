@@ -1,7 +1,7 @@
 // import { NextResponse } from 'next/server';
 // import { getServerSession } from 'next-auth';
 // import { connectDB } from '@/lib/db';
-// import { Class } from '@/models/Class';
+// import { ClassInfo } from '@/models/Class';
 // import { authOptions } from '../auth/[...nextauth]/route';
 
 // export async function GET() {

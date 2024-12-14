@@ -1,16 +1,18 @@
 import mongoose from "mongoose";
 
-const attendanceSchema = new mongoose.Schema({
+const classInfoSchema = new mongoose.Schema({
     userId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User',
-        required: true
+        required: true,
+        unique: true
     },
 
     subject: [{
+        name:{
         type: String,
-        required: true,
-    
+        required: true
+        },
         allclasses: [{
                 date: {
                     type: Date,
@@ -64,4 +66,4 @@ const attendanceSchema = new mongoose.Schema({
 }, 
 { timestamps: true });
 
-export const Class = mongoose.models.Class || mongoose.model('Class', attendanceSchema);
+export const ClassInfo = mongoose.models.ClassInfo || mongoose.model('ClassInfo', classInfoSchema);

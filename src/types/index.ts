@@ -41,3 +41,18 @@ export interface User {
     createdAt?: Date;
     updatedAt?: Date;
   }
+
+  export interface SubjectInfo {
+    name: string;
+    allclasses: any[];
+    allHappened: number;
+    allAttended: number;
+  }
+
+  export interface ClassInfoInterface {
+    _id: string;
+    userId: string;
+    subject: SubjectInfo[];
+    createdAt?: Date;
+    updatedAt?: Date;
+  }

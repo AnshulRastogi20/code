@@ -1,7 +1,7 @@
 'use client'
 
 import { Preset } from '@/types'
-import {toast} from 'react-hot-toast'
+import { toast } from 'react-hot-toast' 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,7 +19,7 @@ import { PresetCreationDrawer } from "@/components/PresetCreationDrawer"
 export default function ProfilePage() {
 
 
-    const [selectedPreset, setSelectedPreset] = useState<string>('')
+  const [selectedPreset, setSelectedPreset] = useState<string>('')
   const [presets, setPresets] = useState<Preset[]>([])
   const [isLoading, setIsLoading] = useState(true)
   
@@ -61,7 +61,12 @@ export default function ProfilePage() {
   const handleApplyPreset = async (presetId: string) => {
     try {
       await applyPreset.mutateAsync(presetId)
-      toast.success('Timetable updated')
+      
+      await axios.post('/api/classinfo');
+      
+      
+      toast.success('Timetable updated and Blank Attendence Record Created')
+
     } catch (error) {
       console.error('Failed to apply preset:', error)
       toast.error('Failed to update timetable')

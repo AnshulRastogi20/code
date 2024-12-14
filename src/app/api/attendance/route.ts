@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { Class } from "@/models/Class";
+import { ClassInfo } from "@/models/ClassInfo";
 import { connectDB } from "@/lib/db";
 
 export async function POST(req: Request) {
@@ -22,26 +22,28 @@ export async function POST(req: Request) {
 
         console.log('user id -- ' , session.user._id)
 
-        let attendanceRecord = await Class.findOne({ userId: session.user._id });
+        let attendanceRecord = await ClassInfo.findOne({ userId: session.user._id });
 
         // If no record exists, return error
         if (!attendanceRecord) {
             return NextResponse.json({ error: "No attendance record found" }, { status: 404 });
         }
-
+        console.log("record - ",attendanceRecord)
+        console.log("\n\n\n\n\n")
         // Find the subject at the given period index
         const subject = attendanceRecord.subject[periodIndex];
         if (!subject) {
             return NextResponse.json({ error: "Invalid period index" }, { status: 400 });
         }
+        console.log("subject -- ", subject)
 
         // Find the class for the given date
         const classIndex = subject.allclasses.findIndex(
             (cls: any) => new Date(cls.date).toDateString() === new Date(date).toDateString()
         );
-
+    
         if (classIndex === -1) {
-            return NextResponse.json({ error: "Class not found for the given date" }, { status: 404 });
+            return NextResponse.json({ error: "Class not found for the given date" }, { status: 411 });
         }
 
         // Check if the class is disabled

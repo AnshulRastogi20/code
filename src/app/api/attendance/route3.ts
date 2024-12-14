@@ -1,5 +1,5 @@
 // import { NextRequest, NextResponse } from "next/server";
-// import { Class } from "@/models/Class";
+// import { ClassInfo } from "@/models/Class";
 // import { connectDB } from '@/lib/db';
 
 // connectDB();

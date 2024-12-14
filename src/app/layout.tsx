@@ -3,8 +3,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { HydrationOverlay } from "@builder.io/react-hydration-overlay";
+// import { HydrationOverlay } from "@builder.io/react-hydration-overlay";
 import QueryProvider from './QueryProvider';
+import { Toaster } from 'react-hot-toast';
 
 
 
@@ -25,9 +26,9 @@ export default function RootLayout({
       <body className={`${inter.className} bg-black text-white min-h-screen`}>
         <main className="container mx-auto p-4">
         <QueryProvider>
-        <HydrationOverlay>
-        {children}
-        </HydrationOverlay>
+        {/* <HydrationOverlay> */}
+        <Toaster position="top-center" />{children}
+        {/* </HydrationOverlay> */}
         </QueryProvider>
 
 
