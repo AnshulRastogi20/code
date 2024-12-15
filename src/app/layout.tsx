@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: 'Track and manage college attendance',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode

@@ -36,7 +36,7 @@ interface Period {
 }
 
 export default function SchedulePage() {
-  const [changedPeriods, setChangedPeriods] = useState<{[key: number]: boolean}>({});
+  const [changedPeriods, setChangedPeriods] = useState<{[key: string]: boolean}>({});
   const [timetable, setTimetable] = useState<DaySchedule | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const today = new Date()
@@ -69,24 +69,28 @@ export default function SchedulePage() {
     fetchTodaySchedule()
   }, [dayName])
 
-  const handleAttendanceChange = async (periodIndex: number, attended: boolean) => {
-    setChangedPeriods(prev => ({ ...prev, [periodIndex]: true }));
+  const handleAttendanceChange = async (subject: string, attended: boolean) => {
+    setChangedPeriods(prev => ({ ...prev, [subject]: true }));
     try {
       const response = await axios.post('/api/attendance', {
-        periodIndex,
+        subjectName: subject,
         attended,
         date: today.toISOString()
       });
       
       // Update the period with new attendance counts
       if (timetable && response.data) {
-        const updatedPeriods = [...timetable.periods];
-        updatedPeriods[periodIndex] = {
-          ...updatedPeriods[periodIndex],
-          allAttended: response.data.allAttended,
-          allHappened: response.data.allHappened,
-          attended
-        };
+        const updatedPeriods = timetable.periods.map(period => {
+          if (period.subject === subject) {
+            return {
+              ...period,
+              allAttended: response.data.allAttended,
+              allHappened: response.data.allHappened,
+              attended
+            };
+          }
+          return period;
+        });
         setTimetable({ ...timetable, periods: updatedPeriods });
       }
       
@@ -96,22 +100,26 @@ export default function SchedulePage() {
     }
   }
 
-  const handleDisableClass = async (periodIndex: number) => {
+  const handleDisableClass = async (subject: string) => {
     try {
-      const period = timetable?.periods[periodIndex];
+      const period = timetable?.periods.find(p => p.subject === subject);
       await axios.post('/api/attendance/holiday', {
-        periodIndex,
+        subjectName: subject,
         date: today.toISOString(),
         isHoliday: !period?.isHoliday
       });
       
       // Update local state
       if (timetable) {
-        const updatedPeriods = [...timetable.periods];
-        updatedPeriods[periodIndex] = {
-          ...updatedPeriods[periodIndex],
-          isHoliday: !period?.isHoliday
-        };
+        const updatedPeriods = timetable.periods.map(period => {
+          if (period.subject === subject) {
+            return {
+              ...period,
+              isHoliday: !period.isHoliday
+            };
+          }
+          return period;
+        });
         setTimetable({ ...timetable, periods: updatedPeriods });
       }
       
@@ -121,11 +129,11 @@ export default function SchedulePage() {
     }
   }
 
-  const handleTopicsUpdate = async (periodIndex: number, topics: string) => {
-    setChangedPeriods(prev => ({ ...prev, [periodIndex]: true }));
+  const handleTopicsUpdate = async (subject: string, topics: string) => {
+    setChangedPeriods(prev => ({ ...prev, [subject]: true }));
     try {
       await axios.post('/api/attendance/topics', {
-        periodIndex,
+        subjectName: subject,
         topics,
         date: today.toISOString()
       })
@@ -135,18 +143,18 @@ export default function SchedulePage() {
     }
   }
 
-  const handleSaveChanges = async (periodIndex: number) => {
+  const handleSaveChanges = async (subject: string) => {
     try {
-      const period = timetable?.periods[periodIndex];
+      const period = timetable?.periods.find(p => p.subject === subject);
       if (period) {
         await axios.post('/api/attendance', {
-          periodIndex,
+          subjectName: subject,
           attended: period.attended,
           topics: period.topicsCovered,
           date: today.toISOString()
         });
         toast.success('Changes saved');
-        setChangedPeriods(prev => ({ ...prev, [periodIndex]: false }));
+        setChangedPeriods(prev => ({ ...prev, [subject]: false }));
       }
     } catch (error) {
       toast.error('Failed to save changes');
@@ -171,13 +179,13 @@ export default function SchedulePage() {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className=" text-black text-2xl font-bold">
+        <h1 className=" text-white text-2xl font-bold">
           {dayName}, {today.getDate()} {monthName}
         </h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
-              <Settings className="h-4 w-4" />
+              <Settings className="text-black *:h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -193,8 +201,8 @@ export default function SchedulePage() {
       </div>
 
       <div className="space-y-4">
-        {timetable?.periods.map((period, index) => (
-          <Card key={index}>
+        {timetable?.periods.map((period) => (
+          <Card key={period.subject}>
             <CardContent className="p-4">
               <div className="grid grid-cols-1 gap-4">
                 {/* Period Details */}
@@ -213,14 +221,14 @@ export default function SchedulePage() {
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Checkbox 
-                        id={`attendance-${index}`}
+                        id={`attendance-${period.subject}`}
                         checked={period.attended}
                         onCheckedChange={(checked) => 
-                          handleAttendanceChange(index, checked as boolean)
+                          handleAttendanceChange(period.subject, checked as boolean)
                         }
                         disabled={period.isHoliday}
                       />
-                      <label htmlFor={`attendance-${index}`}>
+                      <label htmlFor={`attendance-${period.subject}`}>
                         Attended
                       </label>
                     </div>
@@ -233,7 +241,7 @@ export default function SchedulePage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem 
-                          onClick={() => handleDisableClass(index)}
+                          onClick={() => handleDisableClass(period.subject)}
                         >
                           {period.isHoliday ? 'Enable Class' : 'Disable Class'}
                         </DropdownMenuItem>
@@ -246,13 +254,13 @@ export default function SchedulePage() {
                 <Input
                   placeholder="Topics covered in class..."
                   value={period.topicsCovered || ''}
-                  onChange={(e) => handleTopicsUpdate(index, e.target.value)}
+                  onChange={(e) => handleTopicsUpdate(period.subject, e.target.value)}
                   disabled={!period.attended || period.isHoliday}
                 />
 
                 {/* Save Button */}
-                {changedPeriods[index] && (
-                  <Button onClick={() => handleSaveChanges(index)}>
+                {changedPeriods[period.subject] && (
+                  <Button onClick={() => handleSaveChanges(period.subject)}>
                     Save Changes
                   </Button>
                 )}

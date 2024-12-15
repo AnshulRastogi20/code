@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { ClassInfo } from "@/models/ClassInfo";
 import { connectDB } from "@/lib/db";
+import { SubjectInfo } from "@/types";
 
 export async function POST(req: Request) {
     try {
@@ -15,8 +16,8 @@ export async function POST(req: Request) {
         // Connect to database
         await connectDB();
 
-        // Parse request body
-        const { periodIndex, attended, date } = await req.json();
+        // Parse request body with subject name instead of periodIndex
+        const { subjectName, attended, date } = await req.json();
 
         // Find the user's attendance record
 
@@ -30,10 +31,11 @@ export async function POST(req: Request) {
         }
         console.log("record - ",attendanceRecord)
         console.log("\n\n\n\n\n")
-        // Find the subject at the given period index
-        const subject = attendanceRecord.subject[periodIndex];
+        // Find the subject by name instead of index
+        const subject = attendanceRecord.subject.find((sub:SubjectInfo )=> sub.name === subjectName);
+        
         if (!subject) {
-            return NextResponse.json({ error: "Invalid period index" }, { status: 400 });
+            return NextResponse.json({ error: "Subject not found" }, { status: 400 });
         }
         console.log("subject -- ", subject)
 
