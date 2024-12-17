@@ -1,17 +1,17 @@
 // middleware.ts
-import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { NextRequest } from 'next/server';
+import { withAuth } from "next-auth/middleware"
+import { NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  const session = await getToken({ req: request });
-  
-  if (!session && !request.nextUrl.pathname.startsWith('/api/auth')) {
-    return NextResponse.redirect(new URL('/api/auth/signin', request.url));
+export default withAuth(
+  function middleware(req) {
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token
+    },
   }
-  
-  return NextResponse.next();
-}
+)
 
 export const config = {
   matcher: ['/api/:path*']
