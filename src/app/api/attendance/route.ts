@@ -3,20 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { ClassInfo } from "@/models/ClassInfo";
 import { connectDB } from "@/lib/db";
-import { SubjectInfo } from "@/types";
+import { ClassEntry, SubjectInfo } from "@/types";
 
 export async function POST(req: Request) {
     try {
-        // Get the authenticated user session
+        // Verify user authentication using NextAuth session
         const session = await getServerSession(authOptions);
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         console.log(session)
-        // Connect to database
+        // Connect to MongoDB database
         await connectDB();
 
-        // Parse request body with subject name instead of periodIndex
+        // Extract attendance marking parameters from request
         const { subjectName, attended, date } = await req.json();
 
         // Find the user's attendance record
@@ -24,14 +24,12 @@ export async function POST(req: Request) {
         console.log('user id -- ' , session.user._id)
 
         let attendanceRecord = await ClassInfo.findOne({ userId: session.user._id });
-
-        // If no record exists, return error
         if (!attendanceRecord) {
             return NextResponse.json({ error: "No attendance record found" }, { status: 404 });
         }
         console.log("record - ",attendanceRecord)
         console.log("\n\n\n\n\n")
-        // Find the subject by name instead of index
+        // Find the specific subject in user's records
         const subject = attendanceRecord.subject.find((sub:SubjectInfo )=> sub.name === subjectName);
         
         if (!subject) {
@@ -39,40 +37,47 @@ export async function POST(req: Request) {
         }
         console.log("subject -- ", subject)
 
-        // Find the class for the given date
-        const classIndex = subject.allclasses.findIndex(
-            (cls: any) => new Date(cls.date).toDateString() === new Date(date).toDateString()
+        // Find the class for the specified date
+        
+
+        const classIndex: number = subject.allclasses.findIndex(
+            (cls: ClassEntry) => new Date(cls.date).toDateString() === new Date(date).toDateString()
         );
     
         if (classIndex === -1) {
             return NextResponse.json({ error: "Class not found for the given date" }, { status: 411 });
         }
 
-        // Check if the class is disabled
+        // Prevent attendance marking for holidays
         if (subject.allclasses[classIndex].isHoliday) {
             return NextResponse.json({ error: "Cannot mark attendance for disabled class" }, { status: 400 });
         }
 
-        // Update attendance status
+        // Store previous attendance state to track changes
         const previousAttendance = subject.allclasses[classIndex].attended;
+        
+        // Update attendance status for the specific class
         subject.allclasses[classIndex].attended = attended;
         subject.allclasses[classIndex].happened = true;
 
-        // Update total attendance counts
+        // Update attendance statistics
         if (!previousAttendance && attended) {
+            // When marking present for previously absent class
             subject.allAttended = (subject.allAttended || 0) + 1;
         } else if (previousAttendance && !attended) {
+            // When marking absent for previously present class
             subject.allAttended = (subject.allAttended || 0) - 1;
         }
 
-        // Update total classes happened if this is first time marking
+        // Increment total classes counter if this is first time marking
         if (!subject.allclasses[classIndex].happened) {
             subject.allHappened = (subject.allHappened || 0) + 1;
         }
 
-        // Save the changes
+        // Save updated attendance record
         await attendanceRecord.save();
 
+        // Return updated statistics
         return NextResponse.json({
             message: "Attendance updated successfully",
             allAttended: subject.allAttended,

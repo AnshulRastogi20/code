@@ -16,6 +16,11 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: 'jwt',
   },
+  pages: {
+    signIn: '/auth/sign-in',
+    signOut: '/auth/sign-in',
+    error: '/auth/sign-in', // Error code passed in query string as ?error=
+  },
   callbacks: {
     async signIn({ user, account }) {
       if (!user?.email) return false;
@@ -52,6 +57,11 @@ export const authOptions: AuthOptions = {
       }
       return session;
     },
+  },
+  events: {
+    signOut: async () => {
+      // Clear any server-side session data if needed
+    }
   },
 };
 

@@ -71,7 +71,7 @@ const defaultPresets = [
             day: 'TUESDAY',
             periods: [
               {
-                subject: 'ORGANON',
+                subject: 'ORGANON - COLLEGE',
                 startTime: '09:15',
                 endTime: '10:00',
                 teacher: 'DR. PRIYANKA',  
@@ -416,7 +416,7 @@ const defaultPresets = [
             day: 'TUESDAY',
             periods: [
               {
-                subject: 'ORGANON',
+                subject: 'CHEMISTRY',
                 startTime: '09:15',
                 endTime: '10:00',
                 teacher: 'DR. PRIYANKA',  

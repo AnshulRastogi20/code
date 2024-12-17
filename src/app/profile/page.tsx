@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import axios from 'axios'
 import { useTimetable } from '@/hooks/useAppData'
 import { PresetCreationDrawer } from "@/components/PresetCreationDrawer"
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
 
@@ -22,7 +23,7 @@ export default function ProfilePage() {
   const [selectedPreset, setSelectedPreset] = useState<string>('')
   const [presets, setPresets] = useState<Preset[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  
+  const router = useRouter()
   const { applyPreset } = useTimetable()
 
   useEffect(() => {
@@ -64,8 +65,8 @@ export default function ProfilePage() {
       
       await axios.post('/api/classinfo');
       
-      
       toast.success('Timetable updated and Blank Attendence Record Created')
+      router.push('/start')
 
     } catch (error) {
       console.error('Failed to apply preset:', error)

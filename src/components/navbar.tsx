@@ -2,17 +2,32 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { usePathname } from 'next/navigation'
-import { Settings } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
 
 export function Navbar() {
   const pathname = usePathname()
+  const { data: session, status } = useSession()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({
+        callbackUrl: '/auth/sign-in',
+        redirect: true
+      })
+      // Clear any local storage or state if needed
+      localStorage.clear()
+      sessionStorage.clear()
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
+  }
+  
+  // Don't render if not authenticated
+  if (status !== 'authenticated' || !session) {
+    return null
+  }
   
   return (
     <nav className="border-b border-white/10 mb-6">
@@ -31,21 +46,22 @@ export function Navbar() {
             Attendance
           </Link>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="destructive" 
+            onClick={handleSignOut}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+          <Link href="/profile">
             <Button variant="outline" className="border-white/10 text-black">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
+              <User className="mr-2 h-4 w-4" />
+              Profile
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Exchange Periods</DropdownMenuItem>
-            <DropdownMenuItem>Mark as Holiday</DropdownMenuItem>
-            <DropdownMenuItem>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </Link>
+        </div>
       </div>
     </nav>
   )

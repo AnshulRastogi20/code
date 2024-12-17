@@ -19,6 +19,7 @@ export interface User {
   
   export interface DaySchedule {
     date: Date;
+    day: String;
     periods: Period[];
     isHoliday?: boolean;
   }
@@ -48,6 +49,13 @@ export interface User {
     allHappened: number;
     allAttended: number;
   }
+
+  export interface ClassEntry {
+    date: string | Date;
+    attended: boolean;
+    isHoliday: boolean;
+    happened: boolean;
+}
 
   export interface ClassInfoInterface {
     _id: string;

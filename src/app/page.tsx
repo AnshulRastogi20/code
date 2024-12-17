@@ -3,9 +3,24 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const [userHasTimetable, setUserHasTimetable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkUserTimetable = async () => {
+      if (session?.user?.email) {
+        const response = await fetch(`/api/user?email=${session.user.email}`);
+        const userData = await response.json();
+        setUserHasTimetable(!!userData.timetableId);
+      }
+    };
+    checkUserTimetable();
+  }, [session]);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex flex-col items-center justify-center">
@@ -27,7 +42,7 @@ export default function Home() {
             <Button 
               variant="outline" 
               className="bg-blue-500 text-white border-2 border-blue-500 hover:bg-blue-600 hover:scale-105 transform transition-all duration-200 px-8 py-6 text-lg"
-              onClick={() => router.push('/auth')}
+              onClick={() => router.push(userHasTimetable ? '/start' : '/profile')}
             >
               Track Now
             </Button>
