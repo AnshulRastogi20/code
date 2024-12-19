@@ -60,7 +60,8 @@ export async function POST(req: Request) {
             {
                 $set: {
                     "subject.$[subj].allclasses.$[cls].happened": false,
-                    "subject.$[subj].allclasses.$[cls].attended": false
+                    "subject.$[subj].allclasses.$[cls].attended": false,
+                    "subject.$[subj].allclasses.$[cls].topicssCovered": []
                 }
             },
             {

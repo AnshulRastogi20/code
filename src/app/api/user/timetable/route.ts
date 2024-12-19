@@ -12,7 +12,7 @@ export async function GET() {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
-    console.log('session or user:', session);
+    console.log('API/TIMETABLE');
     
 
     if (!session?.user?.email) {

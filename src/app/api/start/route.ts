@@ -65,20 +65,28 @@ export async function POST(req: Request) {
       classInfo.subject.forEach((subject: SubjectInfo) => {
         const periodInfo = todaySchedule.periods.find((p :Period)=> p.subject === subject.name)
         if (periodInfo) {
-          subject.allclasses.push({
-            date: today,
-            startTime: periodInfo.startTime,
-            endTime: periodInfo.endTime,
-            isHoliday: action === 'markHoliday',
-            happened: action === 'startDay',
-            attended: false,
-            topicsCovered: []
-          })
+          // Check for duplicate entries
+          const isDuplicate = subject.allclasses.some(cls => 
+            cls.date.toDateString() === today.toDateString() &&
+            cls.startTime === periodInfo.startTime &&
+            cls.endTime === periodInfo.endTime
+          );
 
-           if (action === 'startDay'){
-             // Increment allHappened counter
-             subject.allHappened = (subject.allHappened || 0) + 1;
-           }
+          if (!isDuplicate) {
+            subject.allclasses.push({
+              date: today,
+              startTime: periodInfo.startTime,
+              endTime: periodInfo.endTime,
+              isHoliday: action === 'markHoliday',
+              happened: action === 'startDay',
+              attended: false,
+              topicsCovered: []
+            });
+
+            if (action === 'startDay'){
+              subject.allHappened = (subject.allHappened || 0) + 1;
+            }
+          }
         }
       })
     }

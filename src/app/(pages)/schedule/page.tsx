@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -45,16 +45,73 @@ export default function SchedulePage() {
   const [changedPeriods, setChangedPeriods] = useState<{[key: string]: boolean}>({});
   const [timetable, setTimetable] = useState<DaySchedule | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [disabled, setdisabled] = useState(false)
-  const today = new Date()
-  const dayIndex = today.getDay()
-  const monthIndex = today.getMonth()
+  const [selectedDate] = useState(new Date()) // Initialize once
+  const [dayName, setDayName] = useState('')
+  const [monthName, setMonthName] = useState('')
+  const [dateDisplay, setDateDisplay] = useState('')
 
-  const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  const monthsOfYear = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+  useEffect(() => {
+    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    const monthsOfYear = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    
+    setDayName(daysOfWeek[selectedDate.getDay()])
+    setMonthName(monthsOfYear[selectedDate.getMonth()])
+    setDateDisplay(selectedDate.getDate().toString())
+  }, [selectedDate])
 
-  const dayName = daysOfWeek[dayIndex]
-  const monthName = monthsOfYear[monthIndex]
+  const fetchTodaySchedule = useCallback(async () => {
+    if (!dayName) return; // Don't fetch if dayName isn't set yet
+    
+    try {
+      setIsLoading(true)
+      const [timetableRes, savedDataRes] = await Promise.all([
+        axios.get('/api/user/timetable'),
+        axios.get(`/api/schedule?date=${selectedDate.toISOString()}`)
+      ])
+
+      const todaySchedule = timetableRes.data.schedule.find((day: DaySchedule) => 
+        day.day.toUpperCase() === dayName.toUpperCase()
+      )
+
+      if (todaySchedule && savedDataRes.data.data) {
+        const savedData = savedDataRes.data.data
+        const mergedPeriods = todaySchedule.periods.map((period :Period) => {
+          const savedSubject = savedData.find((s: any) => 
+            s.name === period.subject &&
+            s.allclasses.some((c: any) => 
+              new Date(c.date).toDateString() === selectedDate.toDateString()
+            )
+          )
+
+          if (savedSubject) {
+            const savedClass = savedSubject.allclasses.find((c: any) => 
+              new Date(c.date).toDateString() === selectedDate.toDateString()
+            )
+            return {
+              ...period,
+              attended: savedClass.attended,
+              happened: savedClass.happened,
+              isHoliday: savedClass.isHoliday,
+              disabled: !savedClass.happened,
+              topicsCovered: savedClass.topicsCovered.join(', '),
+              allAttended: savedSubject.allAttended,
+              allHappened: savedSubject.allHappened
+            }
+          }
+          return period
+        })
+
+        setTimetable({ ...todaySchedule, periods: mergedPeriods })
+      } else {
+        setTimetable(todaySchedule)
+      }
+    } catch (error) {
+      console.error('Failed to fetch schedule:', error)
+      toast.error('Failed to load schedule')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [dayName, selectedDate])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -63,65 +120,50 @@ export default function SchedulePage() {
   }, [status, router])
 
   useEffect(() => {
-    const fetchTodaySchedule = async () => {
-      try {
-        setIsLoading(true)
-        const { data } = await axios.get('/api/user/timetable')
-        const todaySchedule = data.schedule.find((day: DaySchedule) => 
-          day.day.toUpperCase() === dayName.toUpperCase()
-        )
-        setTimetable(todaySchedule)
-      } catch (error) {
-        console.error('Failed to fetch timetable:', error)
-        toast.error('Failed to load schedule')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     fetchTodaySchedule()
-  }, [dayName])
+  }, [fetchTodaySchedule])
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/auth/sign-in' })
   }
 
-  const handleAttendanceChange = async (subject: string, attended: boolean) => {
-    setChangedPeriods(prev => ({ ...prev, [subject]: true }));
+  const handleAttendanceChange = async (subject: string, attended: boolean, startTime: string) => {
+    setChangedPeriods(prev => ({ ...prev, [subject + startTime]: true }));
     try {
-      const response = await axios.post('/api/attendance', {
-        subjectName: subject,
-        attended,
-        date: today.toISOString()
-      });
-      
-      // Update the period with new attendance counts
-      if (timetable && response.data) {
-        const updatedPeriods = timetable.periods.map(period => {
-          if (period.subject === subject) {
-            return {
-              ...period,
-              allAttended: response.data.allAttended,
-              allHappened: response.data.allHappened,
-              attended
-            };
-          }
-          return period;
+        const response = await axios.post('/api/attendance', {
+            subjectName: subject,
+            attended,
+            date: selectedDate.toISOString(),
+            startTime
         });
-        setTimetable({ ...timetable, periods: updatedPeriods });
-      }
-      
-      toast.success('Attendance updated');
+        
+        // Update the period with new attendance counts
+        if (timetable && response.data) {
+            const updatedPeriods = timetable.periods.map(period => {
+                if (period.subject === subject && period.startTime === startTime) {
+                    return {
+                        ...period,
+                        allAttended: response.data.allAttended,
+                        allHappened: response.data.allHappened,
+                        attended
+                    };
+                }
+                return period;
+            });
+            setTimetable({ ...timetable, periods: updatedPeriods });
+        }
+        
+        toast.success('Attendance updated');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update attendance');
+        toast.error(error.response?.data?.error || 'Failed to update attendance');
     }
-  }
+}
 
   const handleDisableClass = async (subject: string, shouldDisable: boolean) => {
     try {
         await axios.post('/api/disableClass', {
             subjectName: subject,
-            date: today.toISOString(),
+            date: selectedDate.toISOString(),
             isDisabled: shouldDisable
         });
         console.log("shouldDisable - " , shouldDisable)
@@ -146,13 +188,13 @@ export default function SchedulePage() {
 }
 
 // Modify handleTopicsUpdate function
-const handleTopicsUpdate = async (subject: string, topics: string) => {
-  setChangedPeriods(prev => ({ ...prev, [subject]: true }));
+const handleTopicsUpdate = async (subject: string, topics: string, startTime: string) => {
+  setChangedPeriods(prev => ({ ...prev, [subject + startTime]: true }));
   
   // Update local state immediately
   if (timetable) {
     const updatedPeriods = timetable.periods.map(period => {
-      if (period.subject === subject) {
+      if (period.subject === subject && period.startTime === startTime) {
         return {
           ...period,
           topicsCovered: topics
@@ -167,7 +209,8 @@ const handleTopicsUpdate = async (subject: string, topics: string) => {
     await axios.post('/api/attendance/topics', {
       subjectName: subject,
       topics,
-      date: today.toISOString()
+      date: selectedDate.toISOString(),
+      startTime
     })
     toast.success('Topics updated')
   } catch (error) {
@@ -183,7 +226,7 @@ const handleTopicsUpdate = async (subject: string, topics: string) => {
           subjectName: subject,
           attended: period.attended,
           topics: period.topicsCovered,
-          date: today.toISOString()
+          date: selectedDate.toISOString()
         });
         toast.success('Changes saved');
         setChangedPeriods(prev => ({ ...prev, [subject]: false }));
@@ -196,7 +239,7 @@ const handleTopicsUpdate = async (subject: string, topics: string) => {
   const handleDayHoliday = async () => {
     try {
       await axios.post('/api/attendance/holiday', {
-        date: today.toISOString()
+        date: selectedDate.toISOString()
       })
       toast.success('Day marked as holiday')
     } catch (error) {
@@ -216,7 +259,7 @@ const handleTopicsUpdate = async (subject: string, topics: string) => {
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className=" text-white text-2xl font-bold">
-          {dayName}, {today.getDate()} {monthName}
+          {dayName}, {dateDisplay} {monthName}
         </h1>
         <div className="flex gap-2">
           <DropdownMenu>
@@ -260,22 +303,21 @@ const handleTopicsUpdate = async (subject: string, topics: string) => {
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Checkbox 
-                        id={`attendance-${period.subject}`}
-                        
+                        id={`attendance-${period.subject}-${period.startTime}`}
                         checked={period.attended}
                         onCheckedChange={(checked) => 
-                          handleAttendanceChange(period.subject, checked as boolean)
+                          handleAttendanceChange(period.subject, checked as boolean, period.startTime)
                         }
                         disabled={period.isHoliday||period.disabled}
                       />
-                      <label htmlFor={`attendance-${period.subject}`}>
+                      <label htmlFor={`attendance-${period.subject}-${period.startTime}`}>
                         Attended
                       </label>
                     </div>
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" disabled={period.attended}>
                           Options
                         </Button>
                       </DropdownMenuTrigger>
@@ -294,7 +336,7 @@ const handleTopicsUpdate = async (subject: string, topics: string) => {
                 <Input
                   placeholder="Topics covered in class..."
                   value={period.topicsCovered || ''}
-                  onChange={(e) => handleTopicsUpdate(period.subject, e.target.value)}
+                  onChange={(e) => handleTopicsUpdate(period.subject, e.target.value, period.startTime)}
                   disabled={period.disabled || (!period.attended && !period.topicsCovered)}
                 />
 

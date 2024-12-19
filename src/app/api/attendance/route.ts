@@ -7,81 +7,66 @@ import { ClassEntry, SubjectInfo } from "@/types";
 
 export async function POST(req: Request) {
     try {
-        // Verify user authentication using NextAuth session
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        console.log(session)
-        // Connect to MongoDB database
-        await connectDB();
-
-        // Extract attendance marking parameters from request
-        const { subjectName, attended, date } = await req.json();
-
-        // Find the user's attendance record
-
-        console.log('user id -- ' , session.user._id)
-
-        let attendanceRecord = await ClassInfo.findOne({ userId: session.user._id });
-        if (!attendanceRecord) {
-            return NextResponse.json({ error: "No attendance record found" }, { status: 404 });
-        }
-        console.log("record - ",attendanceRecord)
-        console.log("\n\n\n\n\n")
-        // Find the specific subject in user's records
-        const subject = attendanceRecord.subject.find((sub:SubjectInfo )=> sub.name === subjectName);
+        await connectDB()
+        const session = await getServerSession(authOptions)
         
-        if (!subject) {
-            return NextResponse.json({ error: "Subject not found" }, { status: 400 });
-        }
-        console.log("subject -- ", subject)
-
-        // Find the class for the specified date
-        
-
-        const classIndex: number = subject.allclasses.findIndex(
-            (cls: ClassEntry) => new Date(cls.date).toDateString() === new Date(date).toDateString()
-        );
-    
-        if (classIndex === -1) {
-            return NextResponse.json({ error: "Class not found for the given date" }, { status: 411 });
+        if (!session?.user?.email) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        // Prevent attendance marking for holidays
-        if (subject.allclasses[classIndex].isHoliday) {
-            return NextResponse.json({ error: "Cannot mark attendance for disabled class" }, { status: 400 });
+        const { subjectName, attended, date, startTime } = await req.json()
+        if (!subjectName || attended === undefined || !date || !startTime) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
-        // Store previous attendance state to track changes
-        const previousAttendance = subject.allclasses[classIndex].attended;
-        
-        // Update attendance status for the specific class
-        subject.allclasses[classIndex].attended = attended;
-        subject.allclasses[classIndex].happened = true;
+        const queryDate = new Date(date)
+        queryDate.setHours(0, 0, 0, 0)
 
-        // Update attendance statistics
-        if (!previousAttendance && attended) {
-            // When marking present for previously absent class
-            subject.allAttended = (subject.allAttended || 0) + 1;
-        } else if (previousAttendance && !attended) {
-            // When marking absent for previously present class
-            subject.allAttended = (subject.allAttended || 0) - 1;
+        // Update specific class by subject, date AND startTime
+        const result = await ClassInfo.findOneAndUpdate(
+            {
+                userId: session.user._id,
+                "subject.name": subjectName,
+                "subject.allclasses": {
+                    $elemMatch: {
+                        date: {
+                            $gte: new Date(queryDate.setHours(0,0,0,0)),
+                            $lt: new Date(queryDate.setHours(23,59,59,999))
+                        },
+                        startTime: startTime
+                    }
+                }
+            },
+            {
+                $set: {
+                    "subject.$[subj].allclasses.$[cls].attended": attended,
+                    "subject.$[subj].allclasses.$[cls].happened": true
+                }
+            },
+            {
+                arrayFilters: [
+                    { "subj.name": subjectName },
+                    { 
+                        "cls.date": {
+                            $gte: new Date(queryDate.setHours(0,0,0,0)),
+                            $lt: new Date(queryDate.setHours(23,59,59,999))
+                        },
+                        "cls.startTime": startTime
+                    }
+                ],
+                new: true
+            }
+        )
+
+        if (!result) {
+            return NextResponse.json({ error: "Class not found for the given date and time" }, { status: 404 });
         }
-
-        // Increment total classes counter if this is first time marking
-        if (!subject.allclasses[classIndex].happened) {
-            subject.allHappened = (subject.allHappened || 0) + 1;
-        }
-
-        // Save updated attendance record
-        await attendanceRecord.save();
 
         // Return updated statistics
         return NextResponse.json({
             message: "Attendance updated successfully",
-            allAttended: subject.allAttended,
-            allHappened: subject.allHappened
+            allAttended: result.subject.find((subj: SubjectInfo) => subj.name === subjectName)?.allAttended,
+            allHappened: result.subject.find((subj: SubjectInfo) => subj.name === subjectName)?.allHappened
         });
 
     } catch (error) {

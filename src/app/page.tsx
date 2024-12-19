@@ -22,6 +22,14 @@ export default function Home() {
     checkUserTimetable();
   }, [session]);
 
+  const handleNavigation = () => {
+    if (!session) {
+      router.push('/auth/sign-in');
+    } else {
+      router.push(userHasTimetable ? '/start' : '/profile');
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex flex-col items-center justify-center">
       <motion.div 
@@ -42,7 +50,7 @@ export default function Home() {
             <Button 
               variant="outline" 
               className="bg-blue-500 text-white border-2 border-blue-500 hover:bg-blue-600 hover:scale-105 transform transition-all duration-200 px-8 py-6 text-lg"
-              onClick={() => router.push(userHasTimetable ? '/start' : '/profile')}
+              onClick={handleNavigation}
             >
               Track Now
             </Button>

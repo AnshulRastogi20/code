@@ -7,7 +7,6 @@ import { User } from "@/models/User";
 
 export async function POST(req: Request) {
     try {
-        // Initialize database and authenticate user
         await connectDB();
         const session = await getServerSession(authOptions);
         
@@ -15,12 +14,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { subjectName, topics, date } = await req.json();
-        if (!subjectName || !date) {
+        const { subjectName, topics, date, startTime } = await req.json();
+        if (!subjectName || !date || !startTime) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // Get user
         const user = await User.findOne({ email: session.user.email });
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -28,44 +26,50 @@ export async function POST(req: Request) {
 
         const queryDate = new Date(date);
         queryDate.setHours(0, 0, 0, 0);
-        const nextDay = new Date(queryDate);
-        nextDay.setDate(queryDate.getDate() + 1);
 
-        // Find class info
-        const classInfo = await ClassInfo.findOne({ 
-            userId: user._id,
-            "subject.name": subjectName
-        });
+        // Update using findOneAndUpdate instead of save()
+        const result = await ClassInfo.findOneAndUpdate(
+            {
+                userId: user._id,
+                "subject.name": subjectName,
+                "subject.allclasses": {
+                    $elemMatch: {
+                        date: {
+                            $gte: new Date(queryDate.setHours(0,0,0,0)),
+                            $lt: new Date(queryDate.setHours(23,59,59,999))
+                        },
+                        startTime: startTime
+                    }
+                }
+            },
+            {
+                $set: {
+                    "subject.$[subj].allclasses.$[cls].topicsCovered": topics ? topics.split(',').map((t:String) => t.trim()) : []
+                }
+            },
+            {
+                arrayFilters: [
+                    { "subj.name": subjectName },
+                    {
+                        "cls.date": {
+                            $gte: new Date(queryDate.setHours(0,0,0,0)),
+                            $lt: new Date(queryDate.setHours(23,59,59,999))
+                        },
+                        "cls.startTime": startTime
+                    }
+                ],
+                new: true
+            }
+        );
 
-        if (!classInfo) {
-            return NextResponse.json({ error: "Class info not found" }, { status: 404 });
+        if (!result) {
+            return NextResponse.json({ error: "Class not found" }, { status: 404 });
         }
-
-        const subject = classInfo.subject.find((s: any) => s.name === subjectName);
-        if (!subject) {
-            return NextResponse.json({ error: "Subject not found" }, { status: 404 });
-        }
-
-        const todayClass = subject.allclasses.find((c: any) => {
-            const classDate = new Date(c.date);
-            return classDate >= queryDate && classDate < nextDay;
-        });
-
-        if (!todayClass) {
-            return NextResponse.json({ error: "No class found for today" }, { status: 404 });
-        }
-
-        if (!todayClass.attended) {
-            return NextResponse.json({ error: "Cannot add topics for unattended class" }, { status: 400 });
-        }
-
-        todayClass.topicsCovered = topics;
-        await classInfo.save();
 
         return NextResponse.json({ 
             success: true,
             message: "Topics updated successfully",
-            topics
+            topics: topics ? topics.split(',').map((t:String) => t.trim()) : []
         });
 
     } catch (error: any) {
