@@ -15,8 +15,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { subjectName, date } = await req.json()
-        if (!subjectName || !date) {
+        const { subjectName, date, startTime, isDisabled } = await req.json()
+        if (!subjectName || !date || !startTime || isDisabled === undefined) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
                     (c: ClassEntry) => new Date(c.date).toISOString().split('T')[0] === 
                          today.toISOString().split('T')[0]
                 )
-                // console.log('Found class:', classToUpdate)
+                console.log('Found class:', classToUpdate)
             }
         }
 
@@ -55,28 +55,29 @@ export async function POST(req: Request) {
         const result = await ClassInfo.findOneAndUpdate(
             {
                 userId: user._id,
-                "subject.name": subjectName
+                "subject.name": subjectName,
             },
             {
                 $set: {
-                    "subject.$[subj].allclasses.$[cls].happened": false,
+                    "subject.$[subj].allclasses.$[cls].happened": !isDisabled, // Set to true when enabling
                     "subject.$[subj].allclasses.$[cls].attended": false,
-                    "subject.$[subj].allclasses.$[cls].topicssCovered": []
+                    "subject.$[subj].allclasses.$[cls].topicsCovered": isDisabled ? [] : undefined // Only clear topics when disabling
                 }
             },
             {
                 arrayFilters: [
                     { "subj.name": subjectName },
-                    { "cls.date": {
-                        $gte: new Date(today.setHours(0,0,0,0)),
-                        $lt: new Date(today.setHours(23,59,59,999))
-                    }}
+                    { 
+                        "cls.date": {
+                            $gte: new Date(today.setHours(0,0,0,0)),
+                            $lt: new Date(today.setHours(23,59,59,999))
+                        },
+                        "cls.startTime": startTime
+                    }
                 ],
                 new: true
             }
         )
-
-        // console.log('Raw update result:', JSON.stringify(result, null, 2))
 
         if (!result) {
             const debug = await ClassInfo.findOne({ userId: user._id })
@@ -98,7 +99,30 @@ export async function POST(req: Request) {
             }, { status: 404 })
         }
 
-        return NextResponse.json({ success: true })
+        // Calculate new counts for the subject
+        const subject = result.subject.find((s: SubjectInfo) => s.name === subjectName);
+        const allHappened = subject?.allclasses.filter((cls: ClassEntry) => cls.happened).length || 0;
+        const allAttended = subject?.allclasses.filter((cls: ClassEntry) => cls.attended).length || 0;
+
+        // Update the counts
+        await ClassInfo.updateOne(
+            {
+                userId: user._id,
+                "subject.name": subjectName
+            },
+            {
+                $set: {
+                    "subject.$.allHappened": allHappened,
+                    "subject.$.allAttended": allAttended
+                }
+            }
+        );
+
+        return NextResponse.json({ 
+            success: true,
+            allHappened,
+            allAttended
+        })
 
     } catch (error: any) {
         console.error('Disable class route error:', error)

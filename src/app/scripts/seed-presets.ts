@@ -71,7 +71,7 @@ const defaultPresets = [
             day: 'TUESDAY',
             periods: [
               {
-                subject: 'ORGANON - COLLEGE',
+                subject: 'EM',
                 startTime: '09:15',
                 endTime: '10:00',
                 teacher: 'DR. PRIYANKA',  

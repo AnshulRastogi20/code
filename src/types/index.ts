@@ -11,9 +11,11 @@ export interface User {
     startTime: string;
     endTime: string;
     teacher: string;
+    happened?: boolean;
     attended?: boolean;
     disabled?: boolean;
     topicsCovered?: string;
+    date:Date
   }
   
   

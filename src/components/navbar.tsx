@@ -34,7 +34,7 @@ export function Navbar() {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex gap-4">
           <Link 
-            href="schedule"
+            href="/schedule"
             className={`text-sm ${pathname === '/' ? 'text-white' : 'text-white/70 hover:text-white'}`}
           >
             Schedule
@@ -44,6 +44,12 @@ export function Navbar() {
             className={`text-sm ${pathname === '/attendance' ? 'text-white' : 'text-white/70 hover:text-white'}`}
           >
             Attendance
+          </Link>
+          <Link 
+            href="/calendar"
+            className={`text-sm ${pathname === '/attendance' ? 'text-white' : 'text-white/70 hover:text-white'}`}
+          >
+            Calendar
           </Link>
         </div>
         <div className="flex items-center gap-4">

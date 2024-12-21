@@ -60,7 +60,7 @@ export default function SchedulePage() {
   }, [selectedDate])
 
   const fetchTodaySchedule = useCallback(async () => {
-    if (!dayName) return; // Don't fetch if dayName isn't set yet
+    if (!dayName) return;
     
     try {
       setIsLoading(true)
@@ -75,27 +75,32 @@ export default function SchedulePage() {
 
       if (todaySchedule && savedDataRes.data.data) {
         const savedData = savedDataRes.data.data
-        const mergedPeriods = todaySchedule.periods.map((period :Period) => {
+        const mergedPeriods = todaySchedule.periods.map((period: Period) => {
           const savedSubject = savedData.find((s: any) => 
             s.name === period.subject &&
             s.allclasses.some((c: any) => 
-              new Date(c.date).toDateString() === selectedDate.toDateString()
+              new Date(c.date).toDateString() === selectedDate.toDateString() &&
+              c.startTime === period.startTime  // Add this check
             )
           )
 
           if (savedSubject) {
             const savedClass = savedSubject.allclasses.find((c: any) => 
-              new Date(c.date).toDateString() === selectedDate.toDateString()
+              new Date(c.date).toDateString() === selectedDate.toDateString() &&
+              c.startTime === period.startTime  // Add this check
             )
-            return {
-              ...period,
-              attended: savedClass.attended,
-              happened: savedClass.happened,
-              isHoliday: savedClass.isHoliday,
-              disabled: !savedClass.happened,
-              topicsCovered: savedClass.topicsCovered.join(', '),
-              allAttended: savedSubject.allAttended,
-              allHappened: savedSubject.allHappened
+            
+            if (savedClass) {
+              return {
+                ...period,
+                attended: savedClass.attended,
+                happened: savedClass.happened,
+                isHoliday: savedClass.isHoliday,
+                disabled: !savedClass.happened,
+                topicsCovered: savedClass.topicsCovered.join(', '),
+                allAttended: savedSubject.allAttended,
+                allHappened: savedSubject.allHappened
+              }
             }
           }
           return period
@@ -130,14 +135,14 @@ export default function SchedulePage() {
   const handleAttendanceChange = async (subject: string, attended: boolean, startTime: string) => {
     setChangedPeriods(prev => ({ ...prev, [subject + startTime]: true }));
     try {
-        const response = await axios.post('/api/attendance', {
+        const response = await axios.post('/api/attendance/update', {
             subjectName: subject,
             attended,
             date: selectedDate.toISOString(),
             startTime
         });
         
-        // Update the period with new attendance counts
+        // Update only the specific period that was changed
         if (timetable && response.data) {
             const updatedPeriods = timetable.periods.map(period => {
                 if (period.subject === subject && period.startTime === startTime) {
@@ -156,25 +161,42 @@ export default function SchedulePage() {
         toast.success('Attendance updated');
     } catch (error: any) {
         toast.error(error.response?.data?.error || 'Failed to update attendance');
+        // Revert the checkbox state on error
+        if (timetable) {
+            const updatedPeriods = timetable.periods.map(period => {
+                if (period.subject === subject && period.startTime === startTime) {
+                    return {
+                        ...period,
+                        attended: !attended // revert to previous state
+                    };
+                }
+                return period;
+            });
+            setTimetable({ ...timetable, periods: updatedPeriods });
+        }
     }
 }
 
-  const handleDisableClass = async (subject: string, shouldDisable: boolean) => {
+// Modify handleDisableClass function
+const handleDisableClass = async (subject: string, shouldDisable: boolean, startTime: string) => {
     try {
-        await axios.post('/api/disableClass', {
+        const response = await axios.post('/api/disableClass', {
             subjectName: subject,
             date: selectedDate.toISOString(),
+            startTime,
             isDisabled: shouldDisable
         });
-        console.log("shouldDisable - " , shouldDisable)
+
         // Update local state
         if (timetable) {
             const updatedPeriods = timetable.periods.map(period => {
-                if (period.subject === subject) {
+                if (period.subject === subject && period.startTime === startTime) {
                     return {
                         ...period,
                         disabled: shouldDisable,
-                        attended: shouldDisable ? false : period.attended
+                        attended: shouldDisable ? false : period.attended,
+                        allHappened: response.data.allHappened,
+                        allAttended: response.data.allAttended
                     };
                 }
                 return period;
@@ -218,23 +240,24 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
   }
 }
 
-  const handleSaveChanges = async (subject: string) => {
-    try {
-      const period = timetable?.periods.find(p => p.subject === subject);
-      if (period) {
-        await axios.post('/api/attendance', {
-          subjectName: subject,
-          attended: period.attended,
-          topics: period.topicsCovered,
-          date: selectedDate.toISOString()
-        });
-        toast.success('Changes saved');
-        setChangedPeriods(prev => ({ ...prev, [subject]: false }));
-      }
-    } catch (error) {
-      toast.error('Failed to save changes');
+const handleSaveChanges = async (subject: string, startTime: string) => {
+  try {
+    const period = timetable?.periods.find(p => p.subject === subject && p.startTime === startTime);
+    if (period) {
+      await axios.post('/api/attendance/update', {
+        subjectName: subject,
+        attended: period.attended,
+        topics: period.topicsCovered,
+        date: selectedDate.toISOString(),
+        startTime
+      });
+      toast.success('Changes saved');
+      setChangedPeriods(prev => ({ ...prev, [subject + startTime]: false }));
     }
+  } catch (error) {
+    toast.error('Failed to save changes');
   }
+}
 
   const handleDayHoliday = async () => {
     try {
@@ -315,20 +338,15 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
                       </label>
                     </div>
                     
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" disabled={period.attended}>
-                          Options
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem 
-                          onClick={() => handleDisableClass(period.subject, !period.disabled)}
+                    
+                        <Button variant="outline" size="sm" 
+                        className='border-red-500'
+                        disabled={period.attended} 
+                        onClick={() => handleDisableClass(period.subject, !period.disabled, period.startTime)}
                         >
-                          {period.disabled ? 'Enable Class' : 'Disable Class'}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          {period.disabled ? 'Enable ' : 'Disable '}
+                        </Button>
+                      
                   </div>
                 </div>
 
@@ -341,8 +359,8 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
                 />
 
                 {/* Save Button */}
-                {changedPeriods[period.subject] && (
-                  <Button onClick={() => handleSaveChanges(period.subject)}>
+                {changedPeriods[period.subject + period.startTime] && (
+                  <Button onClick={() => handleSaveChanges(period.subject, period.startTime)}>
                     Save Changes
                   </Button>
                 )}

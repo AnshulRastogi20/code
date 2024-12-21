@@ -30,6 +30,13 @@ export async function POST(req: Request) {
 
     // Get current day's schedule
     const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayUTC = new Date(Date.UTC(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0, 0, 0, 0
+    ))
     const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()]
     
     // Find schedule for current day
@@ -51,44 +58,45 @@ export async function POST(req: Request) {
         allclasses: [],
         allHappened: 0,
         allAttended: 0
-      }))
+      }));
 
       classInfo = new ClassInfo({
         userId: user._id,
         subject: initialSubjects
-      })
+      });
     }
 
     // Process day's classes based on action type
     if (action === 'startDay' || action === 'markHoliday') {
-      // Update each subject's attendance records
-      classInfo.subject.forEach((subject: SubjectInfo) => {
-        const periodInfo = todaySchedule.periods.find((p :Period)=> p.subject === subject.name)
-        if (periodInfo) {
-          // Check for duplicate entries
-          const isDuplicate = subject.allclasses.some(cls => 
+      // Process each period in today's schedule
+      todaySchedule.periods.forEach((period: Period) => {
+        const subject = classInfo.subject.find((s:SubjectInfo) => s.name === period.subject);
+        if (subject) {
+          // Check for duplicate entries with same date AND time
+          const isDuplicate = subject.allclasses.some((cls:Period) => 
             cls.date.toDateString() === today.toDateString() &&
-            cls.startTime === periodInfo.startTime &&
-            cls.endTime === periodInfo.endTime
+            cls.startTime === period.startTime &&
+            cls.endTime === period.endTime
           );
 
           if (!isDuplicate) {
             subject.allclasses.push({
-              date: today,
-              startTime: periodInfo.startTime,
-              endTime: periodInfo.endTime,
+              date: todayUTC,  // Use UTC date
+              startTime: period.startTime,
+              endTime: period.endTime,
               isHoliday: action === 'markHoliday',
               happened: action === 'startDay',
               attended: false,
               topicsCovered: []
             });
 
-            if (action === 'startDay'){
-              subject.allHappened = (subject.allHappened || 0) + 1;
+            if (action === 'startDay') {
+              // subject.allHappened = (subject.allHappened || 0) + 1;
+              subject.allHappened = subject.allclasses.filter((cls:Period )=> cls.happened).length;
             }
           }
         }
-      })
+      });
     }
 
     await classInfo?.save()
