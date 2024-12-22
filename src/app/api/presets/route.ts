@@ -1,3 +1,9 @@
+/**
+ * API routes for managing timetable presets
+ * GET: Retrieves all available presets after seeding default presets
+ * POST: Creates a new custom preset for authenticated users
+ */
+
 // app/api/presets/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -7,6 +13,7 @@ import { seedPresets } from '@/app/scripts/seed-presets';
 
 export async function GET() {
   try {
+    // Initialize database and seed default presets
     await connectDB();
     await seedPresets();
     console.log("Fetching presets...");
@@ -20,12 +27,14 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    // Verify user authentication
     const session = await getServerSession();
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const data = await req.json();
     console.log('Received preset data:', data);
 
+    // Validate required fields and schedule structure
     // Validate the required fields
     if (!data.name || !data.schedule) {
       return NextResponse.json({ 
@@ -40,6 +49,7 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
+    // Create new preset with validated data
     // Create the preset with validated data
     const preset = await Preset.create({
       name: data.name,
@@ -53,6 +63,7 @@ export async function POST(req: Request) {
     return NextResponse.json(preset);
 
   } catch (error) {
+    // Handle errors during preset creation
     console.error('Error creating preset:', error);
     if (error instanceof Error) {
       return NextResponse.json({ 

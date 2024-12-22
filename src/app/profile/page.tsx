@@ -19,9 +19,9 @@ import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
 
-
   const [selectedPreset, setSelectedPreset] = useState<string>('')
   const [presets, setPresets] = useState<Preset[]>([])
+  const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const { applyPreset } = useTimetable()
@@ -29,22 +29,26 @@ export default function ProfilePage() {
   useEffect(() => {
     let mounted = true
     
-    const fetchPresets = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true)
-        const response = await axios.get<Preset[]>('/api/presets')
+        const [presetsResponse, currentResponse] = await Promise.all([
+          axios.get<Preset[]>('/api/presets'),
+          axios.get<Preset>('/api/user/timetable/current')
+        ])
         
         if (mounted) {
-          setPresets(response.data.map(presets => ({
-            _id: presets._id,
-            name: presets.name,
-            schedule: presets.schedule,
-            createdBy: presets.createdBy
+          setPresets(presetsResponse.data.map(preset => ({
+            _id: preset._id,
+            name: preset.name,
+            schedule: preset.schedule,
+            createdBy: preset.createdBy
           })))
+          setCurrentPreset(currentResponse.data)
         }
       } catch (error) {
-        console.error('Failed to fetch presets:', error)
-        toast.error('Failed to load presets')
+        console.error('Failed to fetch data:', error)
+        toast.error('Failed to load data')
       } finally {
         if (mounted) {
           setIsLoading(false)
@@ -52,12 +56,12 @@ export default function ProfilePage() {
       }
     }
 
-    fetchPresets()
+    fetchData()
     
     return () => {
       mounted = false
     }
-  }, []) // Remove setSelectedPreset from deps
+  }, [])
 
   const handleApplyPreset = async (presetId: string) => {
     try {
@@ -75,14 +79,29 @@ export default function ProfilePage() {
   
   };
 
-
-
-
     return (
         <div className="container mx-auto px-4 py-6">
             <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
             
             <div className="grid gap-6 md:grid-cols-2">
+                {/* Current Timetable Card - Moved to top */}
+                <Card className="md:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Current Active Timetable</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {currentPreset ? (
+                            <p className="text-lg font-semibold text-center">
+                                {currentPreset.name}
+                            </p>
+                        ) : (
+                            <p className="text-sm text-gray-500 text-center">
+                                No timetable currently active
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Set Custom Timetable</CardTitle>

@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from '@/components/ui/input'
 import { set } from 'mongoose'
+import Link from 'next/link'
+
 // import { Period } from '@/types'
 
 interface DaySchedule {
@@ -287,17 +289,19 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Settings className="text-black *:h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-40 h-10 text-black">
+              <ArrowLeftRight className="h-4 w-10 " />
+              Exchange Periods
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleDayHoliday()}>
-                Mark as Holiday
+                Exchange 1 period
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <ArrowLeftRight className="h-4 w-4 mr-2" />
-                Exchange Periods
+                <Link href="/exchange">
+                Permanent Exchange
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

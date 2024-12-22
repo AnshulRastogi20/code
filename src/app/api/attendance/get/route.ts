@@ -1,3 +1,8 @@
+/**
+ * API route for retrieving attendance statistics
+ * GET: Fetches and calculates attendance percentages for all subjects
+ */
+
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
@@ -6,6 +11,7 @@ import { connectDB } from "@/lib/db";
 
 export async function GET() {
     try {
+        // Verify authentication and connect to database
         // Verify user authentication
         const session = await getServerSession(authOptions);
         if (!session?.user) {
@@ -15,6 +21,7 @@ export async function GET() {
         // Connect to database
         await connectDB();
 
+        // Fetch and calculate attendance statistics
         // Fetch attendance record for the authenticated user
         const attendanceRecord = await ClassInfo.findOne({ userId: session.user._id });
 
@@ -32,6 +39,7 @@ export async function GET() {
 
         return NextResponse.json(subjectsAttendance);
     } catch (error) {
+        // ...existing error handling...
         console.error("Error fetching attendance:", error);
         return NextResponse.json({ error: "Failed to fetch attendance" }, { status: 500 });
     }

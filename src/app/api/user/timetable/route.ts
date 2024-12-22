@@ -1,3 +1,9 @@
+/**
+ * API route for managing user timetables
+ * GET: Fetches the current timetable for an authenticated user
+ * POST: Updates or creates a timetable for an authenticated user
+ */
+
 // app/api/user/timetable/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -10,6 +16,7 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function GET() {
   try {
+    // Initialize database and verify authentication
     await connectDB();
     const session = await getServerSession(authOptions);
     console.log('API/TIMETABLE');
@@ -26,6 +33,7 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found in database' }, { status: 409 });
     }
 
+    // Find user's timetable using MongoDB ObjectId
     const userId = new mongoose.Types.ObjectId(dbUser._id);
     console.log(userId)
     const timetable = await Timetable.findOne({ userId: userId});
@@ -36,6 +44,7 @@ export async function GET() {
 
     return NextResponse.json(timetable);
   } catch (error) {
+    // ...existing error handling...
     console.error('Error in GET /api/user/timetable:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
@@ -43,6 +52,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    // Verify authentication and connect to database
     await connectDB();
     const session = await getServerSession(authOptions);
     console.log('session or user:', session);
@@ -62,6 +72,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log('Received request body:', body);
     
+    // Validate preset ID and find preset in database
     const { presetId } = body;
     if (!presetId) {
       return NextResponse.json({ error: 'Preset ID is required' }, { status: 400 });
@@ -87,6 +98,7 @@ export async function POST(req: Request) {
       }, { status: 407 });
     }
 
+    // Update or create timetable with preset data
     const presetIdtobeInserted = new mongoose.Types.ObjectId(preset._id);
 
     const timetable = await Timetable.findOneAndUpdate(
@@ -99,6 +111,7 @@ export async function POST(req: Request) {
       { new: true, upsert: true }
     );
 
+    // Update user's timetable reference and selected preset
     const timetableId = new mongoose.Types.ObjectId(timetable._id);
 
     await User.findByIdAndUpdate(
@@ -112,6 +125,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(timetable);
   } catch (error) {
+    // ...existing error handling...
     console.error('Timetable update error:', error);
     return NextResponse.json({ 
       error: 'Failed to update timetable',

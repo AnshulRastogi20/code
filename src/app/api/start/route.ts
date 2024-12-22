@@ -1,3 +1,4 @@
+// Import necessary dependencies
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { User } from '@/models/User'
@@ -5,8 +6,12 @@ import { Timetable } from '@/models/Timetable'
 import { ClassInfo } from '@/models/ClassInfo'
 import { connectDB } from '@/lib/db'
 import { authOptions } from '../auth/[...nextauth]/route'
-import type { DaySchedule, SubjectInfo, ClassInfoInterface , Period} from '@/types'
+import type { DaySchedule, SubjectInfo, ClassInfoInterface, Period } from '@/types'
 
+/**
+ * POST endpoint to handle starting a new day or marking a holiday
+ * This function initializes or updates class records for the current day
+ */
 export async function POST(req: Request) {
   try {
     // Initialize database and authenticate user
@@ -17,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Extract action type (startDay or markHoliday)
+    // Extract action type from request body
     const { action } = await req.json()
 
     // Get user's timetable information
@@ -28,7 +33,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Timetable not found' }, { status: 404 })
     }
 
-    // Get current day's schedule
+    // Set up date handling for today
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const todayUTC = new Date(Date.UTC(
@@ -37,9 +42,10 @@ export async function POST(req: Request) {
       today.getDate(),
       0, 0, 0, 0
     ))
+    // Get current day name (Monday, Tuesday, etc.)
     const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()]
     
-    // Find schedule for current day
+    // Find today's schedule in the timetable
     const todaySchedule = timetable.schedule.find((day: DaySchedule) => 
       day.day.toUpperCase() === dayName.toUpperCase()
     )
@@ -48,11 +54,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No schedule found for today' }, { status: 404 })
     }
 
-    // Initialize class info if not exists
+    // Get or create class info for the user
     let classInfo = await ClassInfo.findOne({ userId: user._id })
     
     if (!classInfo) {
-      // Create new class info with initial subject setup
+      // Initialize new class info with subjects from today's schedule
       const initialSubjects: SubjectInfo[] = todaySchedule.periods.map((period:Period) => ({
         name: period.subject,
         allclasses: [],
@@ -66,22 +72,23 @@ export async function POST(req: Request) {
       });
     }
 
-    // Process day's classes based on action type
+    // Process classes based on action type (startDay or markHoliday)
     if (action === 'startDay' || action === 'markHoliday') {
       // Process each period in today's schedule
       todaySchedule.periods.forEach((period: Period) => {
         const subject = classInfo.subject.find((s:SubjectInfo) => s.name === period.subject);
         if (subject) {
-          // Check for duplicate entries with same date AND time
+          // Check for duplicate entries
           const isDuplicate = subject.allclasses.some((cls:Period) => 
             cls.date.toDateString() === today.toDateString() &&
             cls.startTime === period.startTime &&
             cls.endTime === period.endTime
           );
 
+          // Add new class entry if not duplicate
           if (!isDuplicate) {
             subject.allclasses.push({
-              date: todayUTC,  // Use UTC date
+              date: todayUTC,
               startTime: period.startTime,
               endTime: period.endTime,
               isHoliday: action === 'markHoliday',
@@ -90,15 +97,16 @@ export async function POST(req: Request) {
               topicsCovered: []
             });
 
+            // Update class count if starting day
             if (action === 'startDay') {
-              // subject.allHappened = (subject.allHappened || 0) + 1;
-              subject.allHappened = subject.allclasses.filter((cls:Period )=> cls.happened).length;
+              subject.allHappened = subject.allclasses.filter((cls:Period) => cls.happened).length;
             }
           }
         }
       });
     }
 
+    // Save changes to database
     await classInfo?.save()
     return NextResponse.json({ success: true })
 
