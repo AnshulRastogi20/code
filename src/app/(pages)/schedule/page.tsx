@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { set } from 'mongoose'
 import Link from 'next/link'
+import { Badge } from "@/components/ui/badge"
 
 // import { Period } from '@/types'
 
@@ -39,6 +40,8 @@ interface Period {
   endTime: string;
   topicsCovered?: string;
   disabled?: boolean;
+  temporarySubject?: string | null;
+  originalSubject?: string;
 }
 
 export default function SchedulePage() {
@@ -101,7 +104,9 @@ export default function SchedulePage() {
                 disabled: !savedClass.happened,
                 topicsCovered: savedClass.topicsCovered.join(', '),
                 allAttended: savedSubject.allAttended,
-                allHappened: savedSubject.allHappened
+                allHappened: savedSubject.allHappened,
+                temporarySubject: savedClass.temporarySubject,
+                originalSubject: savedClass.temporarySubject ? period.subject : undefined
               }
             }
           }
@@ -287,24 +292,14 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
           {dayName}, {dateDisplay} {monthName}
         </h1>
         <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+         
+              <Link href="/exchange">
               <Button variant="outline" size="icon" className="w-40 h-10 text-black">
               <ArrowLeftRight className="h-4 w-10 " />
-              Exchange Periods
+                Exchange Periods
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleDayHoliday()}>
-                Exchange 1 period
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href="/exchange">
-                Permanent Exchange
                 </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+           
           
         </div>
       </div>
@@ -317,7 +312,18 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
                 {/* Period Details */}
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-semibold">{period.subject}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{period.subject}</h3>
+                      {period.temporarySubject && (
+                        <Badge 
+                          variant="outline" 
+                          className="ml-2 cursor-help"
+                          title={`Exchanged with ${period.originalSubject}`}
+                        >
+                          Exchange
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {period.startTime} - {period.endTime}
                     </p>
@@ -325,7 +331,6 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
                       Teacher: {period.teacher}
                     </p>
                   </div>
-                  
                   {/* Attendance and Disable Controls */}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">

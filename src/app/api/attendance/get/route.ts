@@ -9,7 +9,7 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import { ClassInfo } from "@/models/ClassInfo";
 import { connectDB } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
         // Verify authentication and connect to database
         // Verify user authentication
@@ -21,6 +21,11 @@ export async function GET() {
         // Connect to database
         await connectDB();
 
+        // Parse URL to get query parameters
+        const url = new URL(req.url);
+        const fromDate = url.searchParams.get('fromDate');
+        const tillDate = url.searchParams.get('tillDate');
+
         // Fetch and calculate attendance statistics
         // Fetch attendance record for the authenticated user
         const attendanceRecord = await ClassInfo.findOne({ userId: session.user._id });
@@ -30,12 +35,26 @@ export async function GET() {
         }
 
         // Calculate attendance statistics for each subject
-        const subjectsAttendance = attendanceRecord.subject.map((subject: any) => ({
-            name: subject.name,
-            total: subject.allHappened || 0,     // Total classes held
-            attended: subject.allAttended || 0,   // Classes attended
-            percentage: subject.allHappened ? (subject.allAttended / subject.allHappened) * 100 : 0  // Attendance percentage
-        }));
+        const subjectsAttendance = attendanceRecord.subject.map((subject: any) => {
+            // Filter classes based on date range if provided
+            const filteredClasses = subject.allclasses.filter((cls: any) => {
+                if (!fromDate || !tillDate) return true;
+                const classDate = new Date(cls.date);
+                const start = new Date(fromDate);
+                const end = new Date(tillDate);
+                return classDate >= start && classDate <= end;
+            });
+
+            const happened = filteredClasses.filter((cls: any) => cls.happened).length;
+            const attended = filteredClasses.filter((cls: any) => cls.attended).length;
+
+            return {
+                name: subject.name,
+                total: happened,
+                attended: attended,
+                percentage: happened ? (attended / happened) * 100 : 0
+            };
+        });
 
         return NextResponse.json(subjectsAttendance);
     } catch (error) {

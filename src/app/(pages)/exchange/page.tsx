@@ -8,6 +8,7 @@ interface Period {
   subject: string;
   startTime: string;
   endTime: string;
+  endDate?: string; // Add this
 }
 
 interface DaySchedule {
@@ -27,6 +28,7 @@ export default function ExchangePage() {
   const [secondPeriod, setSecondPeriod] = useState({ day: '', startTime: '', endTime: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const fetchTimetable = async () => {
@@ -57,7 +59,11 @@ export default function ExchangePage() {
       const response = await fetch('/api/exchange-periods', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstPeriod, secondPeriod }),
+        body: JSON.stringify({ 
+          firstPeriod, 
+          secondPeriod,
+          endDate: endDate || null 
+        }),
       });
 
       if (!response.ok) {
@@ -71,6 +77,7 @@ export default function ExchangePage() {
       // Reset selections after successful exchange
       setFirstPeriod({ day: '', startTime: '', endTime: '' });
       setSecondPeriod({ day: '', startTime: '', endTime: '' });
+      setEndDate('');
     } catch (error) {
       setError('Failed to exchange periods');
       toast.error('Failed to exchange periods');
@@ -158,6 +165,28 @@ export default function ExchangePage() {
                 ))}
             </select>
           )}
+        </div>
+
+        <div className="border p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow mt-4">
+          <h2 className="text-xl font-semibold mb-4 text-black">Exchange Duration</h2>
+          <div className="flex items-center gap-4">
+            <input
+              type="date"
+              className="flex-1 p-2.5 border rounded-md text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+            />
+            <button
+              className="text-blue-500 hover:text-blue-600"
+              onClick={() => setEndDate('')}
+            >
+              Clear
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            Leave empty for permanent exchange
+          </p>
         </div>
 
         {error && <p className="text-red-500 text-center font-medium">{error}</p>}

@@ -15,7 +15,11 @@ export interface User {
     attended?: boolean;
     disabled?: boolean;
     topicsCovered?: string;
-    date:Date
+    date:Date;
+    temporaryExchange: {
+      originalSubject: string;
+      exchangeEndDate: Date;
+    } | null;
   }
   
   
@@ -60,9 +64,20 @@ export interface User {
 }
 
   export interface ClassInfoInterface {
+
     _id: string;
     userId: string;
     subject: SubjectInfo[];
     createdAt?: Date;
     updatedAt?: Date;
+    date: Date;
+    startTime: string;
+    endTime: string;
+    isHoliday: boolean;
+    happened: boolean;
+    attended: boolean;
+    topicsCovered: string[];
+    temporarySubject: string | null;
+    exchangeEndDate: Date | null;
   }
+

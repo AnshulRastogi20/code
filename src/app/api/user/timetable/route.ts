@@ -46,7 +46,7 @@ export async function GET() {
   } catch (error) {
     // ...existing error handling...
     console.error('Error in GET /api/user/timetable:', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Server error' }, { status: 501 });
   }
 }
 
