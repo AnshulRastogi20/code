@@ -19,7 +19,6 @@ export async function GET() {
     // Initialize database and verify authentication
     await connectDB();
     const session = await getServerSession(authOptions);
-    console.log('API/TIMETABLE');
     
 
     if (!session?.user?.email) {
@@ -28,14 +27,13 @@ export async function GET() {
     }
 
     const dbUser = await User.findOne({ email: session.user.email });
-    console.log("email - ", session.user.email)
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found in database' }, { status: 409 });
     }
 
     // Find user's timetable using MongoDB ObjectId
     const userId = new mongoose.Types.ObjectId(dbUser._id);
-    console.log(userId)
+    // console.log(userId)
     const timetable = await Timetable.findOne({ userId: userId});
     
     if (!timetable) {

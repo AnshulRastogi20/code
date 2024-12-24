@@ -14,11 +14,37 @@ const timetableSchema = new mongoose.Schema({
   schedule: [{
     day: String,
     periods: [{
-    subject: String,
-    startTime: String,
-    endTime: String
+      subject: String,
+      startTime: String,
+      endTime: String,
+      temporaryExchange: {
+        type: {
+          originalSubject: String,
+          exchangeEndDate: Date
+        },
+        required: false,
+        default: undefined
+      }
     }]
   }]
-  }, { timestamps: true });
+}, { timestamps: true });
+
+// Add pre-save middleware to cleanup expired exchanges
+timetableSchema.pre('save', function(next) {
+  const currentDate = new Date();
   
-  export const Timetable = mongoose.models.Timetable || mongoose.model('Timetable', timetableSchema);
+  this.schedule.forEach(day => {
+    day.periods.forEach(period => {
+      if (period.temporaryExchange?.exchangeEndDate && 
+          new Date(period.temporaryExchange.exchangeEndDate) < currentDate) {
+        // Restore original subject
+        period.subject = period.temporaryExchange.originalSubject;
+        period.temporaryExchange = null;
+      }
+    });
+  });
+  
+  next();
+});
+  
+export const Timetable = mongoose.models.Timetable || mongoose.model('Timetable', timetableSchema);

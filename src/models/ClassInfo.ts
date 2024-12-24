@@ -1,5 +1,6 @@
-import { ClassInfoInterface } from "@/types";
+import { ClassInfoInterface, Period } from "@/types";
 import mongoose from "mongoose";
+import { SubjectInfo } from "../types";
 
 const classInfoSchema = new mongoose.Schema({
     userId: { 
@@ -46,6 +47,16 @@ const classInfoSchema = new mongoose.Schema({
             topicsCovered: {
                 type: [String],
                 default: []
+            },
+            temporarySubject: {
+                type: mongoose.Schema.Types.Mixed,
+                default: null,
+                required: false
+            },
+            exchangeEndDate: {
+                type: mongoose.Schema.Types.Mixed,
+                default: null,
+                required: false
             }
         }],
         allHappened:{
@@ -65,7 +76,7 @@ const classInfoSchema = new mongoose.Schema({
 classInfoSchema.pre<ClassInfoInterface>('validate', function (next:any) {
     let validationError = null;
     
-    this.subject.forEach((subject) => {
+    this.subject.forEach((subject:SubjectInfo) => {
       subject.allclasses.forEach((cls) => {
         // Holiday validation
         if (cls.isHoliday && (cls.happened || cls.attended)) {
@@ -90,5 +101,33 @@ classInfoSchema.pre<ClassInfoInterface>('validate', function (next:any) {
     
     next(validationError);
 });
+
+
+
+// Add pre-save middleware to handle temporary exchanges
+classInfoSchema.pre('save', function(next) {
+    const currentDate = new Date();
+    
+    this.subject.forEach(subj => {
+      subj.allclasses.forEach(cls => {
+        // Handle expired temporary exchanges
+        if (cls.exchangeEndDate && new Date(cls.exchangeEndDate) < currentDate) {
+          cls.temporarySubject = null;
+          cls.exchangeEndDate = null;
+        }
+        
+        // Update attendance counts after exchange
+        if (cls.temporarySubject) {
+          const targetSubject = this.subject.find(s => s.name === cls.temporarySubject.subject);
+          if (targetSubject) {
+            targetSubject.allHappened = targetSubject.allclasses.filter(c => c.happened).length;
+            targetSubject.allAttended = targetSubject.allclasses.filter(c => c.attended).length;
+          }
+        }
+      });
+    });
+    
+    next();
+  });
 
 export const ClassInfo = mongoose.models.ClassInfo || mongoose.model('ClassInfo', classInfoSchema);
