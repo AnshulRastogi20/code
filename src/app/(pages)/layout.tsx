@@ -28,9 +28,9 @@ export default function RootLayout({
   }
 
   return (
-    <div className={`${inter.className} bg-black text-white min-h-screen`}>
+    <div className={`${inter.className} bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white min-h-screen`}>
       <Navbar />
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto px-4 py-6">
         <Toaster position="top-center" />
         {children}
       </div>

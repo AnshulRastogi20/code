@@ -1,18 +1,16 @@
-/**
- * API routes for calendar operations
- * GET: Retrieves formatted calendar data with class schedules
- * POST: Marks specific dates as holidays
- */
-
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { User } from '@/models/User'
 import { ClassInfo } from '@/models/ClassInfo'
+import { Timetable } from '@/models/Timetable'
 import { connectDB } from '@/lib/db'
 import { authOptions } from '../auth/[...nextauth]/route'
-import { SubjectInfo } from '@/types'
+import type { DaySchedule, Period, SubjectInfo } from '@/types'
 
-export async function GET(req: Request) {
+/**
+ * GET endpoint to retrieve calendar data with class schedules and temporary exchanges
+ */
+export async function GET() {
     try {
         await connectDB()
         const session = await getServerSession(authOptions)
@@ -22,32 +20,47 @@ export async function GET(req: Request) {
         }
 
         const user = await User.findOne({ email: session.user.email })
-        const classInfo = await ClassInfo.findOne({ userId: user._id })
+        
+        // Fetch both ClassInfo and Timetable data
+        const [classInfo, timetable] = await Promise.all([
+            ClassInfo.findOne({ userId: user._id }),
+            Timetable.findById(user.timetableId)
+        ])
 
         if (!classInfo) {
             return NextResponse.json({ error: 'No class data found' }, { status: 404 })
         }
 
-        // Process and format calendar data
-        const calendarData = classInfo.subject.flatMap((subject:SubjectInfo) => 
-            subject.allclasses.map(cls => ({
-                date: cls.date,
-                isHoliday: cls.isHoliday,
-                happened: cls.happened,
-                subject: subject.name,
-                startTime: cls.startTime,
-                endTime: cls.endTime,
-                topicsCovered: cls.topicsCovered
-            }))
+        // Transform ClassInfo data to calendar format with exchange info
+        const calendarData = classInfo.subject.flatMap((subject: SubjectInfo) => 
+            subject.allclasses.map(cls => {
+                const timetablePeriod = timetable?.schedule
+                    .flatMap((day:DaySchedule) => day.periods)
+                    .find((p:Period) => p.subject === subject.name && p.startTime === cls.startTime)
+
+                return {
+                    date: cls.date,
+                    isHoliday: cls.isHoliday,
+                    happened: cls.happened,
+                    subject: subject.name,
+                    startTime: cls.startTime,
+                    endTime: cls.endTime,
+                    topicsCovered: cls.topicsCovered,
+                    temporaryExchange: timetablePeriod?.temporaryExchange || null
+                }
+            })
         )
 
         return NextResponse.json({ calendarData })
-
     } catch (error: any) {
+        console.error('Calendar API Error:', error)
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
 
+/**
+ * POST endpoint to mark dates as holidays
+ */
 export async function POST(req: Request) {
     try {
         await connectDB()
@@ -68,7 +81,7 @@ export async function POST(req: Request) {
         }
 
         // Mark all classes on the selected date as holiday
-        classInfo.subject.forEach((subject:SubjectInfo) => {
+        classInfo.subject.forEach((subject: SubjectInfo) => {
             subject.allclasses.forEach(cls => {
                 if (cls.date.toDateString() === holidayDate.toDateString()) {
                     cls.isHoliday = true
@@ -82,6 +95,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true })
 
     } catch (error: any) {
+        console.error('Calendar Holiday API Error:', error)
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }

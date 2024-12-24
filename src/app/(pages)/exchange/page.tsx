@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
+import axios from 'axios';
 
 interface Period {
   subject: string;
@@ -70,6 +71,8 @@ export default function ExchangePage() {
         throw new Error('Failed to exchange periods');
       }
 
+      await axios.post('/api/start', { action: 'startDay' })
+
       router.refresh();
       setError('');
       toast.success('Periods exchanged successfully!');
@@ -89,14 +92,14 @@ export default function ExchangePage() {
   if (!timetable) return <div>Loading...</div>;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white shadow-lg rounded-lg">
-      <h1 className="text-3xl font-bold mb-6 text-black text-center">Exchange Periods</h1>
+    <div className="p-6 max-w-3xl mx-auto bg-white/10 backdrop-blur-sm shadow-lg rounded-xl border border-gray-700">
+      <h1 className="text-3xl font-bold mb-6 text-white text-center">Exchange Periods</h1>
       
       <div className="space-y-6">
-        <div className="border p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div className="border border-gray-700 p-6 rounded-xl bg-white/5 shadow-lg hover:shadow-xl transition-all">
           <h2 className="text-xl font-semibold mb-4 text-black">First Period</h2>
           <select
-            className="w-full mb-3 p-2.5 border rounded-md text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full mb-3 p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={firstPeriod.day}
             onChange={(e) => setFirstPeriod({ ...firstPeriod, day: e.target.value })}
           >
@@ -108,7 +111,7 @@ export default function ExchangePage() {
 
           {firstPeriod.day && (
             <select
-              className="w-full p-2.5 border rounded-md text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={`${firstPeriod.startTime}-${firstPeriod.endTime}`}
               onChange={(e) => {
                 const [startTime, endTime] = e.target.value.split('-');
@@ -130,10 +133,10 @@ export default function ExchangePage() {
           )}
         </div>
 
-        <div className="border p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div className="border border-gray-700 p-6 rounded-xl bg-white/5 shadow-lg hover:shadow-xl transition-all">
           <h2 className="text-xl font-semibold mb-4 text-black">Second Period</h2>
           <select
-            className="w-full mb-3 p-2.5 border rounded-md text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full mb-3 p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={secondPeriod.day}
             onChange={(e) => setSecondPeriod({ ...secondPeriod, day: e.target.value })}
           >
@@ -145,7 +148,7 @@ export default function ExchangePage() {
 
           {secondPeriod.day && (
             <select
-              className="w-full p-2.5 border rounded-md text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={`${secondPeriod.startTime}-${secondPeriod.endTime}`}
               onChange={(e) => {
                 const [startTime, endTime] = e.target.value.split('-');
@@ -192,8 +195,8 @@ export default function ExchangePage() {
         {error && <p className="text-red-500 text-center font-medium">{error}</p>}
         
         <button
-          className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400 
-                     transition-colors duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
+          className="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 disabled:bg-gray-600 
+                     transition-colors duration-200 font-semibold text-lg shadow-lg hover:shadow-xl"
           onClick={handleExchange}
           disabled={loading || !firstPeriod.day || !secondPeriod.day}
         >

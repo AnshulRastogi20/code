@@ -42,6 +42,10 @@ interface Period {
   disabled?: boolean;
   temporarySubject?: string | null;
   originalSubject?: string;
+  temporaryExchange?: {
+    originalSubject: string;
+    exchangeEndDate: Date;
+  } | null;
 }
 
 export default function SchedulePage() {
@@ -95,19 +99,15 @@ export default function SchedulePage() {
               c.startTime === period.startTime  // Add this check
             )
             
-            if (savedClass) {
-              return {
-                ...period,
-                attended: savedClass.attended,
-                happened: savedClass.happened,
-                isHoliday: savedClass.isHoliday,
-                disabled: !savedClass.happened,
-                topicsCovered: savedClass.topicsCovered.join(', '),
-                allAttended: savedSubject.allAttended,
-                allHappened: savedSubject.allHappened,
-                temporarySubject: savedClass.temporarySubject,
-                originalSubject: savedClass.temporarySubject ? period.subject : undefined
-              }
+            return {
+              ...period,
+              attended: savedClass?.attended,
+              happened: savedClass?.happened,
+              isHoliday: savedClass?.isHoliday,
+              disabled: !savedClass?.happened,
+              topicsCovered: savedClass?.topicsCovered.join(', '),
+              allAttended: savedSubject.allAttended,
+              allHappened: savedSubject.allHappened
             }
           }
           return period
@@ -278,106 +278,118 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
   }
 
   if (status === 'loading' || isLoading) {
-    return <div>Loading...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-indigo-600 text-xl">Loading...</div>
+      </div>
+    );
   }
 
-  if (!session) {
-    return null
-  }
+  if (!session) return null;
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className=" text-white text-2xl font-bold">
-          {dayName}, {dateDisplay} {monthName}
-        </h1>
-        <div className="flex gap-2">
-         
-              <Link href="/exchange">
-              <Button variant="outline" size="icon" className="w-40 h-10 text-black">
-              <ArrowLeftRight className="h-4 w-10 " />
-                Exchange Periods
-              </Button>
-                </Link>
-           
-          
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+          <div className="flex flex-col">
+            <span className="text-gray-500 text-sm font-medium">{dayName}</span>
+            <h1 className="text-gray-900 text-2xl font-bold">
+              {dateDisplay} {monthName}
+            </h1>
+          </div>
+          <Link href="/exchange">
+            <Button 
+              variant="outline" 
+              className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm"
+            >
+              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              Exchange Periods
+            </Button>
+          </Link>
+        </div>
+
+        <div className="space-y-3">
+          {timetable?.periods.map((period, index) => (
+            <Card 
+              key={`${period.subject}-${period.startTime}-${index}`}
+              className="border border-gray-700 rounded-xl bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all"
+            >
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-medium text-gray-900">{period.subject}</h3>
+                        {period.temporaryExchange && (
+                          <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
+                            Original: {period.temporaryExchange.originalSubject}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span>{period.startTime} - {period.endTime}</span>
+                        <span>•</span>
+                        <span>{period.teacher}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Checkbox 
+                          id={`attendance-${period.subject}-${period.startTime}`}
+                          checked={period.attended}
+                          onCheckedChange={(checked) => 
+                            handleAttendanceChange(period.subject, checked as boolean, period.startTime)
+                          }
+                          disabled={period.isHoliday || period.disabled}
+                          className="border-gray-300 data-[state=checked]:bg-indigo-600"
+                        />
+                        <label 
+                          htmlFor={`attendance-${period.subject}-${period.startTime}`}
+                          className="text-gray-700 text-sm"
+                        >
+                          Present
+                        </label>
+                      </div>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        disabled={period.attended}
+                        onClick={() => handleDisableClass(period.subject, !period.disabled, period.startTime)}
+                        className={`h-8 px-3 shadow-sm ${
+                          period.disabled 
+                            ? 'border-green-200 text-green-600 hover:bg-green-50' 
+                            : 'border-red-200 text-red-600 hover:bg-red-50'
+                        }`}
+                      >
+                        {period.disabled ? 'Enable' : 'Disable'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Input
+                    placeholder="Topics covered..."
+                    value={period.topicsCovered || ''}
+                    onChange={(e) => handleTopicsUpdate(period.subject, e.target.value, period.startTime)}
+                    disabled={period.disabled || (!period.attended && !period.topicsCovered)}
+                    className="bg-white/5 border-gray-700 text-white h-9 text-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+
+                  {changedPeriods[period.subject + period.startTime] && (
+                    <Button 
+                      onClick={() => handleSaveChanges(period.subject, period.startTime)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto shadow-sm"
+                    >
+                      Save Changes
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
-
-      <div className="space-y-4">
-        {timetable?.periods.map((period, index) => (
-          <Card key={`${period.subject}-${period.startTime}-${index}`}>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 gap-4">
-                {/* Period Details */}
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{period.subject}</h3>
-                      {period.temporarySubject && (
-                        <Badge 
-                          variant="outline" 
-                          className="ml-2 cursor-help"
-                          title={`Exchanged with ${period.originalSubject}`}
-                        >
-                          Exchange
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {period.startTime} - {period.endTime}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Teacher: {period.teacher}
-                    </p>
-                  </div>
-                  {/* Attendance and Disable Controls */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <Checkbox 
-                        id={`attendance-${period.subject}-${period.startTime}`}
-                        checked={period.attended}
-                        onCheckedChange={(checked) => 
-                          handleAttendanceChange(period.subject, checked as boolean, period.startTime)
-                        }
-                        disabled={period.isHoliday||period.disabled}
-                      />
-                      <label htmlFor={`attendance-${period.subject}-${period.startTime}`}>
-                        Attended
-                      </label>
-                    </div>
-                    
-                    
-                        <Button variant="outline" size="sm" 
-                        className='border-red-500'
-                        disabled={period.attended} 
-                        onClick={() => handleDisableClass(period.subject, !period.disabled, period.startTime)}
-                        >
-                          {period.disabled ? 'Enable ' : 'Disable '}
-                        </Button>
-                      
-                  </div>
-                </div>
-
-                {/* Topics Input */}
-                <Input
-                  placeholder="Topics covered in class..."
-                  value={period.topicsCovered || ''}
-                  onChange={(e) => handleTopicsUpdate(period.subject, e.target.value, period.startTime)}
-                  disabled={period.disabled || (!period.attended && !period.topicsCovered)}
-                />
-
-                {/* Save Button */}
-                {changedPeriods[period.subject + period.startTime] && (
-                  <Button onClick={() => handleSaveChanges(period.subject, period.startTime)}>
-                    Save Changes
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
     </div>
-  )
+  );
 }

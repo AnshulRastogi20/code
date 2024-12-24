@@ -14,6 +14,10 @@ interface CalendarData {
     startTime: string
     endTime: string
     topicsCovered: string[]
+    temporaryExchange?: {
+        originalSubject: string;
+        exchangeEndDate: Date;
+    } | null;
 }
 
 export default function CalendarPage() {
@@ -49,27 +53,30 @@ export default function CalendarPage() {
     }
 
     return (
-        <div className="container mx-auto p-4">
-            <div className="flex flex-col items-center space-y-4">
-                <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    modifiers={{
-                        holiday: (date) => calendarData.some(cls => 
-                            new Date(cls.date).toDateString() === date.toDateString() && cls.isHoliday
-                        ),
-                        today: (date) => date.toDateString() === new Date().toDateString(),
-                        noData: (date) => !calendarData.some(cls => 
-                            new Date(cls.date).toDateString() === date.toDateString()
-                        )
-                    }}
-                    modifiersStyles={{
-                        holiday: { color: 'red' },
-                        today: { color: 'blue' },
-                        noData: { color: 'grey' }
-                    }}
-                />
+        <div className="container mx-auto p-6">
+            <div className="flex flex-col items-center space-y-6">
+                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg">
+                    <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        modifiers={{
+                            holiday: (date) => calendarData.some(cls => 
+                                new Date(cls.date).toDateString() === date.toDateString() && cls.isHoliday
+                            ),
+                            today: (date) => date.toDateString() === new Date().toDateString(),
+                            noData: (date) => !calendarData.some(cls => 
+                                new Date(cls.date).toDateString() === date.toDateString()
+                            )
+                        }}
+                        className="text-white"
+                        modifiersStyles={{
+                            holiday: { color: 'rgb(248 113 113)' },
+                            today: { color: 'rgb(99 102 241)' },
+                            noData: { color: 'rgb(156 163 175)' }
+                        }}
+                    />
+                </div>
 
                 {selectedDate && (
                     <Drawer>
@@ -78,9 +85,9 @@ export default function CalendarPage() {
                                 {new Date(selectedDate) > new Date() ? 'Mark Holiday' : 'View Schedule'}
                             </Button>
                         </DrawerTrigger>
-                        <DrawerContent>
+                        <DrawerContent className="bg-gray-900 border-t border-gray-700">
                             <DrawerHeader>
-                                <DrawerTitle className='text-black'>
+                                <DrawerTitle className="text-white">
                                     {selectedDate.toDateString()}
                                 </DrawerTitle>
                                 {new Date(selectedDate) > new Date() ? (
@@ -88,18 +95,28 @@ export default function CalendarPage() {
                                         Mark as Holiday
                                     </Button>
                                 ) : (
-                                    <div className="space-y-2 text-black">
+                                    <div className="space-y-2 text-white">
                                         {getClassesForDate(selectedDate).length > 0 ? (
                                             getClassesForDate(selectedDate).map((cls, idx) => (
                                                 <div
                                                     key={idx}
-                                                    className="p-2 border rounded cursor-pointer text-black"
+                                                    className="p-4 border border-gray-700 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-all"
                                                     onClick={() => {
                                                         setSelectedClass(cls)
                                                         setShowTopics(true)
                                                     }}
                                                 >
-                                                    <h3>{cls.subject}</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3>{cls.subject}</h3>
+                                                        {cls.temporaryExchange && (
+                                                            <Badge 
+                                                                variant="outline" 
+                                                                className="ml-2"
+                                                            >
+                                                                Original: {cls.temporaryExchange.originalSubject}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
                                                     <p>{cls.startTime} - {cls.endTime}</p>
                                                 </div>
                                             ))
