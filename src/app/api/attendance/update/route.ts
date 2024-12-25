@@ -66,14 +66,16 @@ export async function POST(req: Request) {
         }
     });
 
-    const previousAttendance = previousState?.subject
-        .find((s:SubjectInfo) => s.name === subjectName)
-        ?.allclasses.find((c:Period) => 
-            c.startTime === startTime && 
-            new Date(c.date).toDateString() === queryDate.toDateString()
-        )?.attended || false;
+    // const previousAttendance = previousState?.subject
+    //     .find((s:SubjectInfo) => s.name === subjectName)
+    //     ?.allclasses.find((c:Period) => 
+    //         c.startTime === startTime && 
+    //         new Date(c.date).toDateString() === queryDate.toDateString()
+    //     )?.attended || false;
 
-    // Only update counter if attendance state actually changed
+    // // Only update counter if attendance state actually changed
+    // const shouldUpdateCounter = previousAttendance !== attended;
+    // const counterChange = shouldUpdateCounter ? (attended ? 1 : -1) : 0;
 
     // Update attendance status and recalculate statistics
     const result = await ClassInfo.findOneAndUpdate(
