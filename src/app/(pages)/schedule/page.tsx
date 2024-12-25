@@ -289,10 +289,10 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
               {dateDisplay} {monthName}
             </h1>
           </div>
-          <Link href="/exchange">
+          <Link href="/exchange" className="w-full sm:w-auto">
             <Button 
               variant="outline" 
-              className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm"
+              className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm w-full sm:w-auto"
             >
               <ArrowLeftRight className="h-4 w-4 mr-2" />
               Exchange Periods
@@ -306,7 +306,7 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
               key={`${period.subject}-${period.startTime}-${index}`}
               className="border border-gray-700 rounded-xl bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all"
             >
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-4">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <div>
@@ -325,7 +325,7 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <div className="flex items-center gap-2">
                         <Checkbox 
                           id={`attendance-${period.subject}-${period.startTime}`}
@@ -349,7 +349,7 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
                         size="sm"
                         disabled={period.attended}
                         onClick={() => handleDisableClass(period.subject, !period.disabled, period.startTime)}
-                        className={`h-8 px-3 shadow-sm ${
+                        className={`h-8 px-2 sm:px-3 text-sm shadow-sm ${
                           period.disabled 
                             ? 'border-green-200 text-green-600 hover:bg-green-50' 
                             : 'border-red-200 text-red-600 hover:bg-red-50'
