@@ -131,19 +131,19 @@ const defaultPresets = [
             day: 'WEDNESDAY',
             periods: [
               {
-                subject: 'ORGANON',
+                subject: 'AP',
                 startTime: '09:15',
                 endTime: '10:00',
                 teacher: 'DR. PRIYANKA',  
               },
               {
-                subject: 'Physics',
+                subject: 'EVS',
                 startTime: '10:00',
                 endTime: '10:45',
                 teacher: 'Mrs. Johnson',
               },
               {
-                subject: 'Mathematics',
+                subject: 'COLLEGE',
                 startTime: '10:45',
                 endTime: '11:30',
                 teacher: 'Mr. Smith', 
@@ -482,13 +482,13 @@ const defaultPresets = [
                 teacher: 'DR. PRIYANKA',  
               },
               {
-                subject: 'Physics',
+                subject: 'MATH',
                 startTime: '10:00',
                 endTime: '10:45',
                 teacher: 'Mrs. Johnson',
               },
               {
-                subject: 'Mathematics',
+                subject: 'SUNDAY',
                 startTime: '10:45',
                 endTime: '11:30',
                 teacher: 'Mr. Smith', 

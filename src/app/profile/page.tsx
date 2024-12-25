@@ -64,19 +64,31 @@ export default function ProfilePage() {
   }, [])
 
   const handleApplyPreset = async (presetId: string) => {
+    // Only show confirmation if there's a current preset
+    if (currentPreset) {
+      const confirmed = window.confirm(
+        "Changing timetable will delete today's attendance records. Are you sure you want to proceed?"
+      );
+
+      if (!confirmed) {
+        return;
+      }
+      
+      // Delete existing records only if there's a current preset
+      await axios.delete('/api/classinfo');
+    }
+
     try {
       await applyPreset.mutateAsync(presetId)
-      
       await axios.post('/api/classinfo');
       
-      toast.success('Timetable updated and Blank Attendence Record Created')
+      toast.success('Timetable updated successfully')
       router.push('/start')
 
     } catch (error) {
       console.error('Failed to apply preset:', error)
       toast.error('Failed to update timetable')
     }
-  
   };
 
     return (

@@ -77,3 +77,47 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to create ClassInfo' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    // Get today's date at midnight UTC
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Find ClassInfo for the user
+    const classInfo = await ClassInfo.findOne({ userId: session.user._id });
+    if (!classInfo) {
+      return NextResponse.json({ message: 'No records found' });
+    }
+
+    // Filter out today's records from each subject
+    classInfo.subject.forEach((subject:SubjectInfo) => {
+      subject.allclasses = subject.allclasses.filter((cls:Period) => {
+        const classDate = new Date(cls.date);
+        classDate.setHours(0, 0, 0, 0);
+        return classDate.getTime() !== today.getTime();
+      });
+
+      // Update counts
+      subject.allHappened = subject.allclasses.filter((cls:Period) => cls.happened).length;
+      subject.allAttended = subject.allclasses.filter((cls:Period) => cls.attended).length;
+    });
+
+    await classInfo.save();
+
+    return NextResponse.json({
+      message: "Today's records deleted successfully"
+    });
+
+  } catch (error) {
+    console.error('ClassInfo deletion error:', error);
+    return NextResponse.json({ error: 'Failed to delete records' }, { status: 500 });
+  }
+}
