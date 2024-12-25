@@ -51,20 +51,20 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Subject not found" }, { status: 404 });
     }
 
-    // First find if there was a previous attendance state
-    const previousState = await ClassInfo.findOne({
-        userId: session.user._id,
-        "subject.name": subjectName,
-        "subject.allclasses": {
-            $elemMatch: {
-                date: {
-                    $gte: new Date(startOfDay),
-                    $lt: new Date(endOfDay)
-                },
-                startTime: startTime
-            }
-        }
-    });
+    // // First find if there was a previous attendance state
+    // const previousState = await ClassInfo.findOne({
+    //     userId: session.user._id,
+    //     "subject.name": subjectName,
+    //     "subject.allclasses": {
+    //         $elemMatch: {
+    //             date: {
+    //                 $gte: new Date(startOfDay),
+    //                 $lt: new Date(endOfDay)
+    //             },
+    //             startTime: startTime
+    //         }
+    //     }
+    // });
 
     // const previousAttendance = previousState?.subject
     //     .find((s:SubjectInfo) => s.name === subjectName)
