@@ -3,7 +3,6 @@ import NextAuth, { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
-import mongoose from 'mongoose';
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -57,11 +56,6 @@ export const authOptions: AuthOptions = {
       }
       return session;
     },
-  },
-  events: {
-    signOut: async () => {
-      // Clear any server-side session data if needed
-    }
   },
 };
 

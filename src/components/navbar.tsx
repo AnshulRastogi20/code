@@ -4,25 +4,14 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { usePathname } from 'next/navigation'
 import { LogOut, User } from 'lucide-react'
-import { signOut, useSession } from 'next-auth/react'
+import {  signOut ,useSession } from 'next-auth/react'
+// import { signOut } from 'next-auth/client'
 
 export function Navbar() {
   const pathname = usePathname()
   const { data: session, status } = useSession()
 
-  const handleSignOut = async () => {
-    try {
-      await signOut({
-        callbackUrl: '/auth/sign-in',
-        redirect: true
-      })
-      // Clear any local storage or state if needed
-      localStorage.clear()
-      sessionStorage.clear()
-    } catch (error) {
-      console.error('Sign out error:', error)
-    }
-  }
+
   
   // Don't render if not authenticated
   if (status !== 'authenticated' || !session) {
@@ -67,7 +56,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <Button 
             variant="outline"
-            onClick={handleSignOut}
+            onClick={() => signOut()}
             className="border-red-900/30 text-red-500 hover:bg-red-950/50 hover:text-red-400"
           >
             <LogOut className="h-4 w-4 mr-2" />

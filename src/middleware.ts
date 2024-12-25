@@ -26,5 +26,9 @@ export const config = {
     "/attendance/:path*",
     "/profile/:path*",
     "/settings/:path*",
+    "/calendar/:path*",
+    "/exchange/:path*",
+    "/timetable/:path*",
+    
   ],
 };

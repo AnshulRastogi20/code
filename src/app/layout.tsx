@@ -25,7 +25,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-black text-white min-h-screen`}>
         <main className="container mx-auto p-4">
-        {/* <SessionProvider> */}
+        {/* <SessionProvider > */}
           <QueryProvider>
           <Providers>
              <Toaster position="top-center" />{children}
