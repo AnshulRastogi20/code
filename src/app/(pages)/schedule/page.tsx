@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { Badge } from "@/components/ui/badge"
-import { ClassInfoInterface, SubjectInfo } from '@/types'
+import { allClasses, SubjectInfo } from '@/types'
 
 // import { Period } from '@/types'
 
@@ -82,14 +82,14 @@ export default function SchedulePage() {
         const mergedPeriods = todaySchedule.periods.map((period: Period) => {
           const savedSubject = savedData.find((s: SubjectInfo) => 
             s.name === period.subject &&
-            s.allclasses.some((c: ClassInfoInterface) => 
+            s.allclasses.some((c: allClasses) => 
               new Date(c.date).toDateString() === selectedDate.toDateString() &&
               c.startTime === period.startTime  // Add this check
             )
           )
 
           if (savedSubject) {
-            const savedClass = savedSubject.allclasses.find((c: ClassInfoInterface) => 
+            const savedClass = savedSubject.allclasses.find((c: allClasses) => 
               new Date(c.date).toDateString() === selectedDate.toDateString() &&
               c.startTime === period.startTime  // Add this check
             )
@@ -130,9 +130,7 @@ export default function SchedulePage() {
     fetchTodaySchedule()
   }, [fetchTodaySchedule])
 
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/auth/sign-in' })
-  }
+
 
   const handleAttendanceChange = async (subject: string, attended: boolean, startTime: string) => {
     setChangedPeriods(prev => ({ ...prev, [subject + startTime]: true }));
@@ -162,8 +160,8 @@ export default function SchedulePage() {
         
         toast.success('Attendance updated');
     } catch (error) {
-      console.log(error)
-        toast.error('Failed to update attendance');
+      console.error('Failed:', error)
+      toast.error('Failed to update attendance');
         // Revert the checkbox state on error
         if (timetable) {
             const updatedPeriods = timetable.periods.map(period => {
@@ -243,6 +241,8 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
     })
     toast.success('Topics updated')
   } catch (error) {
+    console.error('Failed:', error)
+
     toast.error('Failed to update topics')
   }
 }
@@ -262,20 +262,12 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
       setChangedPeriods(prev => ({ ...prev, [subject + startTime]: false }));
     }
   } catch (error) {
+    console.error('Failed:', error)
     toast.error('Failed to save changes');
   }
 }
 
-  const handleDayHoliday = async () => {
-    try {
-      await axios.post('/api/attendance/holiday', {
-        date: selectedDate.toISOString()
-      })
-      toast.success('Day marked as holiday')
-    } catch (error) {
-      toast.error('Failed to mark holiday')
-    }
-  }
+
 
   if (status === 'loading' || isLoading) {
     return (
@@ -373,7 +365,7 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
                     value={period.topicsCovered || ''}
                     onChange={(e) => handleTopicsUpdate(period.subject, e.target.value, period.startTime)}
                     disabled={period.disabled || (!period.attended && !period.topicsCovered)}
-                    className="bg-white/5 border-gray-700 text-white h-9 text-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="bg-white/5 border-gray-700 text-gray-700 text-sm h-9 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
                   />
 
                   {changedPeriods[period.subject + period.startTime] && (

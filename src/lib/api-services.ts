@@ -8,8 +8,8 @@ const api = axios.create({
 
 export const apiService = {
   // Attendance
-  getAttendance: () => api.get('/attendance').then(res => res.data),
-  markAttendance: (data: any) => api.post('/attendance', data).then(res => res.data),
+  // getAttendance: () => api.get('/attendance').then(res => res.data),
+  // markAttendance: (data: any) => api.post('/attendance', data).then(res => res.data),
   
   // Timetable
   getTimetable: () => api.get('/user/timetable').then(res => res.data),

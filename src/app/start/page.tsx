@@ -85,7 +85,7 @@ export default function StartPage() {
           className="text-center mb-12"
         >
           <h1 className="text-4xl font-bold text-white mb-2">
-            Today's Schedule
+            Today&apos;s Schedule
           </h1>
           <p className="text-gray-400">
             {dayName}, {today.getDate()} {monthName}
@@ -136,7 +136,7 @@ export default function StartPage() {
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl flex items-center gap-2"
           >
             <PlayCircle className="w-5 h-5" />
-            Start Today's Day
+            Start Today&apos;s Day
           </Button>
           <Button 
             onClick={handleMarkHoliday}

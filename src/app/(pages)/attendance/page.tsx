@@ -45,7 +45,7 @@ export default function AttendancePage() {
     if (status === 'authenticated') {
       fetchAttendance();
     }
-  }, [status, showAll ]);
+  }, [status, showAll , fetchAttendance]);
 
   const handleDateChange = () => {
     if (fromDate && tillDate) {
@@ -167,12 +167,19 @@ export default function AttendancePage() {
                     {subjects.reduce((acc, curr) => acc + curr.attended, 0)}
                   </td>
                   <td className="text-center p-6">
-                    <span className={`inline-flex items-center px-4 py-2 rounded-full font-bold
-                      ${(subjects.reduce((acc, curr) => acc + curr.percentage, 0) / subjects.length) >= 75
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'}`}>
-                      {(subjects.reduce((acc, curr) => acc + curr.percentage, 0) / subjects.length).toFixed(1)}%
-                    </span>
+                    {(() => {
+                      const totalClasses = subjects.reduce((acc, curr) => acc + curr.total, 0);
+                      const totalAttended = subjects.reduce((acc, curr) => acc + curr.attended, 0);
+                      const overallPercentage = (totalAttended / totalClasses) * 100;
+                      return (
+                        <span className={`inline-flex items-center px-4 py-2 rounded-full font-bold
+                          ${overallPercentage >= 75
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'}`}>
+                          {overallPercentage.toFixed(1)}%
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               )}

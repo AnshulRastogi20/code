@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { ClassInfo } from "@/models/ClassInfo";
 import { connectDB } from "@/lib/db";
-import { ClassEntry, ClassInfoInterface, Period, SubjectInfo } from "@/types";
+import {  Period, SubjectInfo } from "@/types";
 
 export async function POST(req: Request) {
   try {
@@ -74,8 +74,6 @@ export async function POST(req: Request) {
         )?.attended || false;
 
     // Only update counter if attendance state actually changed
-    const shouldUpdateCounter = previousAttendance !== attended;
-    const counterChange = shouldUpdateCounter ? (attended ? 1 : -1) : 0;
 
     // Update attendance status and recalculate statistics
     const result = await ClassInfo.findOneAndUpdate(

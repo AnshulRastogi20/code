@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { ClassInfo } from "@/models/ClassInfo";
 import { connectDB } from "@/lib/db";
-import { ClassInfoInterface, SubjectInfo } from "@/types";
+import { allClasses, SubjectInfo } from "@/types";
 
 export async function GET(req: Request) {
     try {
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
         // Calculate attendance statistics for each subject
         const subjectsAttendance = attendanceRecord.subject.map((subject: SubjectInfo) => {
             // Filter classes based on date range if provided
-            const filteredClasses = subject.allclasses.filter((cls: ClassInfoInterface) => {
+            const filteredClasses = subject.allclasses.filter((cls: allClasses) => {
                 if (!fromDate || !tillDate) return true;
                 const classDate = new Date(cls.date);
                 const start = new Date(fromDate);
@@ -46,8 +46,8 @@ export async function GET(req: Request) {
                 return classDate >= start && classDate <= end;
             });
 
-            const happened = filteredClasses.filter((cls: ClassInfoInterface) => cls.happened).length;
-            const attended = filteredClasses.filter((cls: ClassInfoInterface) => cls.attended).length;
+            const happened = filteredClasses.filter((cls: allClasses) => cls.happened).length;
+            const attended = filteredClasses.filter((cls: allClasses) => cls.attended).length;
 
             return {
                 name: subject.name,
