@@ -37,7 +37,7 @@ export default function StartPage() {
         setTodayClasses(todaySchedule?.periods || [])
       } catch (error) {
         console.error('Failed:', error)
-        toast.error('Failed to load today\'s classes')
+        toast.error('Failed to load today\'s classes', { duration: 1000 })
       } finally {
         setIsLoading(false)
       }
@@ -49,22 +49,22 @@ export default function StartPage() {
   const handleStartDay = async () => {
     try {
       await axios.post('/api/start', { action: 'startDay' })
-      toast.success('Day started successfully')
+      toast.success('Day started successfully', { duration: 1000 })
       router.push('/schedule')
     } catch (error) {
       console.error('Failed:', error)
-      toast.error('Failed to start day')
+      toast.error('Failed to start day', { duration: 1000 })
     }
   }
 
   const handleMarkHoliday = async () => {
     try {
       await axios.post('/api/start', { action: 'markHoliday' })
-      toast.success('Day marked as holiday')
+      toast.success('Day marked as holiday', { duration: 1000 })
       router.push('/schedule')
     } catch (error) {
       console.error('Failed:', error)
-      toast.error('Failed to mark holiday')
+      toast.error('Failed to mark holiday', { duration: 1000 })
     }
   }
 
@@ -77,17 +77,17 @@ export default function StartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl font-bold text-white mb-2">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Today&apos;s Schedule
           </h1>
-          <p className="text-gray-400">
+          <p className="text-gray-500">
             {dayName}, {today.getDate()} {monthName}
           </p>
         </motion.div>
@@ -100,14 +100,14 @@ export default function StartPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="bg-white/10 backdrop-blur-lg border-none hover:bg-white/15 transition-all">
+              <Card className="bg-white border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow transition-all">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="text-xl font-semibold text-white mb-2">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
                         {period.subject}
                       </h3>
-                      <div className="flex items-center text-gray-400 space-x-4">
+                      <div className="flex items-center text-gray-500 space-x-4">
                         <div className="flex items-center">
                           <Clock className="w-4 h-4 mr-2" />
                           {period.startTime} - {period.endTime}
@@ -133,7 +133,7 @@ export default function StartPage() {
         >
           <Button 
             onClick={handleStartDay}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-xl flex items-center gap-2 w-full sm:w-auto justify-center"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-xl flex items-center gap-2 w-full sm:w-auto justify-center shadow-sm"
           >
             <PlayCircle className="w-5 h-5" />
             Start Today&apos;s Day
@@ -141,7 +141,7 @@ export default function StartPage() {
           <Button 
             onClick={handleMarkHoliday}
             variant="destructive"
-            className="bg-red-600 hover:bg-red-700 px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-xl flex items-center gap-2 w-full sm:w-auto justify-center"
+            className="bg-red-100 hover:bg-red-200 text-red-600 px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-xl flex items-center gap-2 w-full sm:w-auto justify-center shadow-sm"
           >
             <Ban className="w-5 h-5" />
             Mark as Holiday

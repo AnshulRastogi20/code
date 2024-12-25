@@ -19,15 +19,15 @@ export function Navbar() {
   }
   
   return (
-    <nav className="bg-black border-b border-zinc-800 shadow-lg mb-6">
+    <nav className="bg-white border-b border-gray-200 shadow-sm mb-6">
       <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
         <div className="flex gap-4 sm:gap-6 flex-wrap justify-center">
           <Link 
             href="/schedule"
             className={`text-sm font-medium transition-colors ${
               pathname === '/' 
-                ? 'text-white' 
-                : 'text-zinc-400 hover:text-white'
+                ? 'text-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
             }`}
           >
             Schedule
@@ -36,8 +36,8 @@ export function Navbar() {
             href="/attendance"
             className={`text-sm font-medium transition-colors ${
               pathname === '/attendance' 
-                ? 'text-white' 
-                : 'text-zinc-400 hover:text-white'
+                ? 'text-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
             }`}
           >
             Attendance
@@ -46,8 +46,8 @@ export function Navbar() {
             href="/calendar"
             className={`text-sm font-medium transition-colors ${
               pathname === '/calendar' 
-                ? 'text-white' 
-                : 'text-zinc-400 hover:text-white'
+                ? 'text-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
             }`}
           >
             Calendar
@@ -57,7 +57,7 @@ export function Navbar() {
           <Button 
             variant="outline"
             onClick={() => signOut()}
-            className="border-red-900/30 text-red-500 hover:bg-red-950/50 hover:text-red-400 text-sm sm:text-base px-3 sm:px-4"
+            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 text-sm sm:text-base px-3 sm:px-4"
           >
             <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
             Sign Out
@@ -65,7 +65,7 @@ export function Navbar() {
           <Link href="/profile" className="w-full sm:w-auto">
             <Button 
               variant="outline" 
-              className="bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-800 text-sm sm:text-base px-3 sm:px-4 w-full"
+              className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 text-sm sm:text-base px-3 sm:px-4 w-full"
             >
               <User className="h-4 w-4 mr-1 sm:mr-2" />
               Profile

@@ -114,7 +114,7 @@ export default function SchedulePage() {
       }
     } catch (error) {
       console.error('Failed to fetch schedule:', error)
-      toast.error('Failed to load schedule')
+      toast.error('Failed to load schedule', { duration: 1000 });
     } finally {
       setIsLoading(false)
     }
@@ -158,10 +158,10 @@ export default function SchedulePage() {
             setTimetable({ ...timetable, periods: updatedPeriods });
         }
         
-        toast.success('Attendance updated');
+        toast.success('Attendance updated', { duration: 2000 });
     } catch (error) {
       console.error('Failed:', error)
-      toast.error('Failed to update attendance');
+      toast.error('Failed to update attendance', { duration: 2000 });
         // Revert the checkbox state on error
         if (timetable) {
             const updatedPeriods = timetable.periods.map(period => {
@@ -204,12 +204,13 @@ const handleDisableClass = async (subject: string, shouldDisable: boolean, start
             });
             setTimetable({ ...timetable, periods: updatedPeriods });
         }
-        toast.success(shouldDisable ? 'Class disabled successfully' : 'Class enabled successfully');
+        toast.success(shouldDisable ? 'Class disabled successfully' : 'Class enabled successfully', { duration: 2000 });
     } catch (error) {
         toast.error(
           axios.isAxiosError(error) 
             ? error.response?.data?.error 
-            : `Failed to ${shouldDisable ? 'disable' : 'enable'} class`
+            : `Failed to ${shouldDisable ? 'disable' : 'enable'} class`,
+          { duration: 2000 }
         );
     }
 }
@@ -239,11 +240,11 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
       date: selectedDate.toISOString(),
       startTime
     })
-    toast.success('Topics updated')
+    toast.success('Topics updated', { duration: 2000 })
   } catch (error) {
     console.error('Failed:', error)
 
-    toast.error('Failed to update topics')
+    toast.error('Failed to update topics', { duration: 2000 })
   }
 }
 
@@ -258,12 +259,12 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
         date: selectedDate.toISOString(),
         startTime
       });
-      toast.success('Changes saved');
+      toast.success('Changes saved', { duration: 1000 });
       setChangedPeriods(prev => ({ ...prev, [subject + startTime]: false }));
     }
   } catch (error) {
     console.error('Failed:', error)
-    toast.error('Failed to save changes');
+        toast.error('Failed to save changes', { duration: 1000 });
   }
 }
 
@@ -304,7 +305,7 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
           {timetable?.periods.map((period, index) => (
             <Card 
               key={`${period.subject}-${period.startTime}-${index}`}
-              className="border border-gray-700 rounded-xl bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all"
+              className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow transition-all"
             >
               <CardContent className="p-4 sm:p-6">
                 <div className="space-y-4">
@@ -365,13 +366,13 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
                     value={period.topicsCovered || ''}
                     onChange={(e) => handleTopicsUpdate(period.subject, e.target.value, period.startTime)}
                     disabled={period.disabled || (!period.attended && !period.topicsCovered)}
-                    className="bg-white/5 border-gray-700 text-gray-700 text-sm h-9 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="bg-white border-gray-200 text-gray-700 text-sm h-9 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500"
                   />
 
                   {changedPeriods[period.subject + period.startTime] && (
                     <Button 
                       onClick={() => handleSaveChanges(period.subject, period.startTime)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto shadow-sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto shadow-sm"
                     >
                       Save Changes
                     </Button>
