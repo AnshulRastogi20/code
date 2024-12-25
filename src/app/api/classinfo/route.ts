@@ -5,7 +5,7 @@ import { User } from '@/models/User';
 import { Timetable } from '@/models/Timetable';
 import { ClassInfo } from '@/models/ClassInfo';
 import { authOptions } from '../auth/[...nextauth]/options';
-import { DaySchedule, Period, SubjectInfo } from '@/types';
+import { allClasses, DaySchedule, Period, SubjectInfo } from '@/types';
 
 
 export async function POST() {
@@ -99,15 +99,15 @@ export async function DELETE() {
 
     // Filter out today's records from each subject
     classInfo.subject.forEach((subject:SubjectInfo) => {
-      subject.allclasses = subject.allclasses.filter((cls:Period) => {
+      subject.allclasses = subject.allclasses.filter((cls:allClasses) => {
         const classDate = new Date(cls.date);
         classDate.setHours(0, 0, 0, 0);
         return classDate.getTime() !== today.getTime();
       });
 
       // Update counts
-      subject.allHappened = subject.allclasses.filter((cls:Period) => cls.happened).length;
-      subject.allAttended = subject.allclasses.filter((cls:Period) => cls.attended).length;
+      subject.allHappened = subject.allclasses.filter((cls:allClasses) => cls.happened).length;
+      subject.allAttended = subject.allclasses.filter((cls:allClasses) => cls.attended).length;
     });
 
     await classInfo.save();
