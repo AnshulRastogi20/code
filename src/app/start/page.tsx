@@ -126,14 +126,14 @@ export default function StartPage() {
         </div>
 
         <motion.div 
-          className="flex gap-4 justify-center"
+          className="flex flex-col sm:flex-row gap-4 justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
           <Button 
             onClick={handleStartDay}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-xl flex items-center gap-2 w-full sm:w-auto justify-center"
           >
             <PlayCircle className="w-5 h-5" />
             Start Today&apos;s Day
@@ -141,7 +141,7 @@ export default function StartPage() {
           <Button 
             onClick={handleMarkHoliday}
             variant="destructive"
-            className="bg-red-600 hover:bg-red-700 px-8 py-6 text-lg rounded-xl flex items-center gap-2"
+            className="bg-red-600 hover:bg-red-700 px-4 sm:px-8 py-4 sm:py-6 text-base sm:text-lg rounded-xl flex items-center gap-2 w-full sm:w-auto justify-center"
           >
             <Ban className="w-5 h-5" />
             Mark as Holiday
