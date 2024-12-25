@@ -22,7 +22,6 @@ export default function ProfilePage() {
   const [selectedPreset, setSelectedPreset] = useState<string>('')
   const [presets, setPresets] = useState<Preset[]>([])
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const { applyPreset } = useTimetable()
 
@@ -31,7 +30,6 @@ export default function ProfilePage() {
     
     const fetchData = async () => {
       try {
-        setIsLoading(true)
         const [presetsResponse, currentResponse] = await Promise.all([
           axios.get<Preset[]>('/api/presets'),
           axios.get<Preset>('/api/user/timetable/current')
@@ -49,10 +47,6 @@ export default function ProfilePage() {
       } catch (error) {
         console.error('Failed to fetch data:', error)
         toast.error('Failed to load data')
-      } finally {
-        if (mounted) {
-          setIsLoading(false)
-        }
       }
     }
 

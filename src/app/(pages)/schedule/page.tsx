@@ -5,20 +5,15 @@ import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Settings, ArrowLeftRight } from 'lucide-react'
+import {  ArrowLeftRight } from 'lucide-react'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { Input } from '@/components/ui/input'
-import { set } from 'mongoose'
 import Link from 'next/link'
 import { Badge } from "@/components/ui/badge"
+import { ClassInfoInterface, SubjectInfo } from '@/types'
 
 // import { Period } from '@/types'
 
@@ -85,16 +80,16 @@ export default function SchedulePage() {
       if (todaySchedule && savedDataRes.data.data) {
         const savedData = savedDataRes.data.data
         const mergedPeriods = todaySchedule.periods.map((period: Period) => {
-          const savedSubject = savedData.find((s: any) => 
+          const savedSubject = savedData.find((s: SubjectInfo) => 
             s.name === period.subject &&
-            s.allclasses.some((c: any) => 
+            s.allclasses.some((c: ClassInfoInterface) => 
               new Date(c.date).toDateString() === selectedDate.toDateString() &&
               c.startTime === period.startTime  // Add this check
             )
           )
 
           if (savedSubject) {
-            const savedClass = savedSubject.allclasses.find((c: any) => 
+            const savedClass = savedSubject.allclasses.find((c: ClassInfoInterface) => 
               new Date(c.date).toDateString() === selectedDate.toDateString() &&
               c.startTime === period.startTime  // Add this check
             )
@@ -166,8 +161,9 @@ export default function SchedulePage() {
         }
         
         toast.success('Attendance updated');
-    } catch (error: any) {
-        toast.error(error.response?.data?.error || 'Failed to update attendance');
+    } catch (error) {
+      console.log(error)
+        toast.error('Failed to update attendance');
         // Revert the checkbox state on error
         if (timetable) {
             const updatedPeriods = timetable.periods.map(period => {
@@ -211,8 +207,12 @@ const handleDisableClass = async (subject: string, shouldDisable: boolean, start
             setTimetable({ ...timetable, periods: updatedPeriods });
         }
         toast.success(shouldDisable ? 'Class disabled successfully' : 'Class enabled successfully');
-    } catch (error: any) {
-        toast.error(error.response?.data?.error || `Failed to ${shouldDisable ? 'disable' : 'enable'} class`);
+    } catch (error) {
+        toast.error(
+          axios.isAxiosError(error) 
+            ? error.response?.data?.error 
+            : `Failed to ${shouldDisable ? 'disable' : 'enable'} class`
+        );
     }
 }
 

@@ -1,8 +1,16 @@
 // lib/api-middleware.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
+import { Session } from 'next-auth';
 
-export const withAuth = (handler: Function) => {
+// Define the type for handler function
+type AuthenticatedHandler = (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  session: Session
+) => Promise<void | NextApiResponse>;
+
+export const withAuth = (handler: AuthenticatedHandler) => {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getServerSession(req);
     

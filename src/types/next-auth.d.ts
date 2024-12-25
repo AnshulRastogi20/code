@@ -1,6 +1,5 @@
 import 'next-auth';
 import { DefaultSession } from 'next-auth';
-import mongoose from 'mongoose';
 
 declare module 'next-auth' {
   interface Session {

@@ -8,14 +8,9 @@ import { getServerSession } from 'next-auth';
 import { connectDB } from '@/lib/db';
 import { Timetable } from '@/models/Timetable';
 import { ClassInfo } from '@/models/ClassInfo';
-import mongoose from 'mongoose';
 import { User } from '@/models/User';
 import { authOptions } from '../auth/[...nextauth]/route';
-
-import { DaySchedule, Period, SubjectInfo } from '@/types';
-import axios from 'axios';
-import toast from 'react-hot-toast';
-
+import { DaySchedule, Period } from '@/types';
 export async function POST(req: Request) {
 
 
@@ -110,8 +105,8 @@ export async function POST(req: Request) {
 
     // Update ClassInfo using aggregation pipeline
     const currentDate = new Date();
-    const todayStr = currentDate.toDateString();
-    const todayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+    // const todayStr = currentDate.toDateString();
+    // const todayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
 
     await ClassInfo.updateOne(
       { userId: dbUser._id },

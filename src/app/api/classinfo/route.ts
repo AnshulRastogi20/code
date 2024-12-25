@@ -5,10 +5,10 @@ import { User } from '@/models/User';
 import { Timetable } from '@/models/Timetable';
 import { ClassInfo } from '@/models/ClassInfo';
 import { authOptions } from '../auth/[...nextauth]/route';
-import { DaySchedule, Period, SubjectInfo, ClassInfoInterface } from '@/types';
+import { DaySchedule, Period, SubjectInfo } from '@/types';
 
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

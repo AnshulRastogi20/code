@@ -47,9 +47,10 @@ export async function GET(req: Request) {
             data: classInfo ? classInfo.subject : []
         })
 
-    } catch (error: any) {
+    } catch (error) {
         // ...existing error handling...
         console.error('Schedule fetch error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+        return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 }

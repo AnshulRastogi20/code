@@ -25,7 +25,7 @@ export default function StartPage() {
     if (status === 'unauthenticated') {
       router.push('/auth/sign-in')
     }
-  }, [status, router])
+  }, [status, router,session])
 
   useEffect(() => {
     const fetchTodayClasses = async () => {
@@ -36,6 +36,7 @@ export default function StartPage() {
         )
         setTodayClasses(todaySchedule?.periods || [])
       } catch (error) {
+        console.error('Failed:', error)
         toast.error('Failed to load today\'s classes')
       } finally {
         setIsLoading(false)
@@ -51,6 +52,7 @@ export default function StartPage() {
       toast.success('Day started successfully')
       router.push('/schedule')
     } catch (error) {
+      console.error('Failed:', error)
       toast.error('Failed to start day')
     }
   }
@@ -61,6 +63,7 @@ export default function StartPage() {
       toast.success('Day marked as holiday')
       router.push('/schedule')
     } catch (error) {
+      console.error('Failed:', error)
       toast.error('Failed to mark holiday')
     }
   }

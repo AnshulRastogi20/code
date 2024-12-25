@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
 import { toast } from 'sonner'
@@ -23,7 +23,8 @@ export default function AttendancePage() {
   const [tillDate, setTillDate] = useState('');
   const [showAll, setShowAll] = useState(true);
 
-  const fetchAttendance = async () => {
+  const fetchAttendance =  useCallback(async () => {
+    
     try {
       setLoading(true);
       const params = showAll ? {} : {
@@ -38,13 +39,13 @@ export default function AttendancePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fromDate, tillDate, showAll, setSubjects, setLoading]);
 
   useEffect(() => {
     if (status === 'authenticated') {
       fetchAttendance();
     }
-  }, [status, showAll]);
+  }, [status, showAll ]);
 
   const handleDateChange = () => {
     if (fromDate && tillDate) {
@@ -122,9 +123,9 @@ export default function AttendancePage() {
               </tr>
             </thead>
             <tbody>
-              {subjects.map((subject, idx) => (
+              {subjects.map((subject, index) => (
                 <tr 
-                  key={subject.name}
+                  key={index}
                   className={`
                     border-t border-gray-100 hover:bg-gray-50 transition-colors
                     ${subject.percentage < 75 ? 'bg-red-50' : ''}

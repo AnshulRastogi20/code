@@ -49,6 +49,8 @@ export function PresetCreationDrawer() {
       startTime: "",
       endTime: "",
       teacher: "",
+      date: new Date(),
+      temporaryExchange: null
     })
     setSchedule(newSchedule)
   }
@@ -81,7 +83,7 @@ export function PresetCreationDrawer() {
 
     setIsLoading(true)
     try {
-      const { data } = await axios.post('/api/presets', {
+      await axios.post('/api/presets', {
         name: presetName,
         schedule: schedule,
         isDefault: false,

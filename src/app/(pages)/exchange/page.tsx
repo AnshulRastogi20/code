@@ -82,8 +82,8 @@ export default function ExchangePage() {
       setSecondPeriod({ day: '', startTime: '', endTime: '' });
       setEndDate('');
     } catch (error) {
-      setError('Failed to exchange periods');
-      toast.error('Failed to exchange periods');
+      setError(error instanceof Error ? error.message : 'An error occurred');
+      toast.error('Failed to exchange periods' );
     } finally {
       setLoading(false);
     }

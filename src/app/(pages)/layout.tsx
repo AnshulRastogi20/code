@@ -21,7 +21,7 @@ export default function RootLayout({
     if (status === 'unauthenticated') {
       router.push('/auth/sign-in')
     }
-  }, [status, router])
+  }, [status, router, session])
 
   if (status === 'loading') {
     return <div>Loading...</div>

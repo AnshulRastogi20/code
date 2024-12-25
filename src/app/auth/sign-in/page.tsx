@@ -2,14 +2,12 @@
 
 import { signIn } from 'next-auth/react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 
 export default function SignIn() {
-    const router = useRouter();
 
     const handleGoogleSignIn = async () => {
         try {
-            const result = await signIn('google', {
+            await signIn('google', {
                 redirect: true,
                 callbackUrl: '/',
             });

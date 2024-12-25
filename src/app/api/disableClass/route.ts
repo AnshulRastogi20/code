@@ -124,8 +124,8 @@ export async function POST(req: Request) {
             allAttended
         })
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Disable class route error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'An unknown error occurred' }, { status: 500 })
     }
 }

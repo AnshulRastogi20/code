@@ -52,9 +52,10 @@ export async function GET() {
         )
 
         return NextResponse.json({ calendarData })
-    } catch (error: any) {
+    } catch (error) {
         console.error('Calendar API Error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+        return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 }
 
@@ -94,8 +95,9 @@ export async function POST(req: Request) {
         await classInfo.save()
         return NextResponse.json({ success: true })
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Calendar Holiday API Error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+        return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 }

@@ -1,4 +1,4 @@
-import { ClassInfoInterface, Period } from "@/types";
+import { ClassInfoInterface } from "@/types";
 import mongoose from "mongoose";
 import { SubjectInfo } from "../types";
 
@@ -73,7 +73,7 @@ const classInfoSchema = new mongoose.Schema({
 }, 
 { timestamps: true });
 
-classInfoSchema.pre<ClassInfoInterface>('validate', function (next:any) {
+classInfoSchema.pre<ClassInfoInterface>('validate', function (next) {
     let validationError = null;
     
     this.subject.forEach((subject:SubjectInfo) => {

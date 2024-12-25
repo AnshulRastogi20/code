@@ -4,6 +4,7 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import { connectDB } from "@/lib/db";
 import { ClassInfo } from "@/models/ClassInfo";
 import { User } from "@/models/User";
+import axios from "axios";
 
 export async function POST(req: Request) {
     try {
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
             },
             {
                 $set: {
-                    "subject.$[subj].allclasses.$[cls].topicsCovered": topics ? topics.split(',').map((t:String) => t.trim()) : []
+                    "subject.$[subj].allclasses.$[cls].topicsCovered": topics ? topics.split(',').map((t:string) => t.trim()) : []
                 }
             },
             {
@@ -69,11 +70,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ 
             success: true,
             message: "Topics updated successfully",
-            topics: topics ? topics.split(',').map((t:String) => t.trim()) : []
+            topics: topics ? topics.split(',').map((t:string) => t.trim()) : []
         });
 
-    } catch (error: any) {
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            return NextResponse.json({ error: error.response?.data }, { status: 500 });
+        }
         console.error("Topics route error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

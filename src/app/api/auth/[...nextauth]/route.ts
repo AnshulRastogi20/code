@@ -21,7 +21,7 @@ export const authOptions: AuthOptions = {
     error: '/auth/sign-in', // Error code passed in query string as ?error=
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user }) {
       if (!user?.email) return false;
       
       await connectDB();

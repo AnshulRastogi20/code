@@ -22,10 +22,21 @@ export interface User {
     } | null;
   }
   
+  export interface allClasses {
+    date: Date;
+    startTime: string;
+    endTime: string;
+    isHoliday: boolean;
+    happened: boolean;
+    attended: boolean;
+    topicsCovered: string[];
+    temporarySubject: string | null;
+    exchangeEndDate: Date | null;
+  }
   
   export interface DaySchedule {
     date: Date;
-    day: String;
+    day: string;
     periods: Period[];
     isHoliday?: boolean;
   }
@@ -51,7 +62,7 @@ export interface User {
 
   export interface SubjectInfo {
     name: string;
-    allclasses: any[];
+    allclasses: allClasses[];
     allHappened: number;
     allAttended: number;
   }
@@ -66,6 +77,7 @@ export interface User {
   export interface ClassInfoInterface {
 
     _id: string;
+    name:string;
     userId: string;
     subject: SubjectInfo[];
     createdAt?: Date;

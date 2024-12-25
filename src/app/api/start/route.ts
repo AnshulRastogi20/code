@@ -6,7 +6,7 @@ import { Timetable } from '@/models/Timetable'
 import { ClassInfo } from '@/models/ClassInfo'
 import { connectDB } from '@/lib/db'
 import { authOptions } from '../auth/[...nextauth]/route'
-import type { DaySchedule, SubjectInfo, ClassInfoInterface, Period } from '@/types'
+import type { DaySchedule, SubjectInfo, Period } from '@/types'
 
 /**
  * POST endpoint to handle starting a new day or marking a holiday
@@ -110,8 +110,8 @@ export async function POST(req: Request) {
     await classInfo?.save()
     return NextResponse.json({ success: true })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Start route error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'An unexpected error occurred' }, { status: 500 })
   }
 }

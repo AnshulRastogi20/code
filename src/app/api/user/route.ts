@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const user = await User.findOne({ email });
     return NextResponse.json(user || {});
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
+    console.error('Start route error:', error)
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to fetch user' }, { status: 500 })
   }
 }
