@@ -4,7 +4,7 @@ import { User } from '@/models/User'
 import { ClassInfo } from '@/models/ClassInfo'
 import { Timetable } from '@/models/Timetable'
 import { connectDB } from '@/lib/db'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '../auth/[...nextauth]/options'
 import type { DaySchedule, Period, SubjectInfo } from '@/types'
 
 /**

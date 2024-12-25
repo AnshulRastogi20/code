@@ -5,7 +5,7 @@ import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { Timetable } from '@/models/Timetable';
 import { Preset } from '@/models/Preset';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from '../../../auth/[...nextauth]/options';
 
 /**
  * GET endpoint to fetch the currently active timetable for the authenticated user

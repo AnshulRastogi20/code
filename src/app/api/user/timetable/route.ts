@@ -12,7 +12,7 @@ import { Preset } from '@/models/Preset';
 import { Timetable } from '@/models/Timetable';
 import mongoose from 'mongoose';
 import { User } from '@/models/User';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '../../auth/[...nextauth]/options';
 
 export async function GET() {
   try {

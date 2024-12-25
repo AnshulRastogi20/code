@@ -9,7 +9,7 @@ import { connectDB } from '@/lib/db';
 import { Timetable } from '@/models/Timetable';
 import { ClassInfo } from '@/models/ClassInfo';
 import { User } from '@/models/User';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '../auth/[...nextauth]/options';
 import { DaySchedule, Period } from '@/types';
 export async function POST(req: Request) {
 

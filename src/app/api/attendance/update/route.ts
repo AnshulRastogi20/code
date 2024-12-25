@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "../../auth/[...nextauth]/options";
 import { ClassInfo } from "@/models/ClassInfo";
 import { connectDB } from "@/lib/db";
 import {  Period, SubjectInfo } from "@/types";

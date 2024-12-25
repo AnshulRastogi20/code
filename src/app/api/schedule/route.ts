@@ -8,7 +8,7 @@ import { getServerSession } from 'next-auth'
 import { ClassInfo } from '@/models/ClassInfo'
 import { User } from '@/models/User'
 import { connectDB } from '@/lib/db'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '../auth/[...nextauth]/options'
 
 export async function GET(req: Request) {
     try {
