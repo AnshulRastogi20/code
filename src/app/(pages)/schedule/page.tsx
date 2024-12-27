@@ -14,6 +14,16 @@ import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { Badge } from "@/components/ui/badge"
 import { allClasses, SubjectInfo } from '@/types'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 
 // import { Period } from '@/types'
 
@@ -53,6 +63,11 @@ export default function SchedulePage() {
   const [dayName, setDayName] = useState('')
   const [monthName, setMonthName] = useState('')
   const [dateDisplay, setDateDisplay] = useState('')
+  const [showHolidayConfirmation, setShowHolidayConfirmation] = useState(false);
+  const [pendingEnableAction, setPendingEnableAction] = useState<{
+    subject: string;
+    startTime: string;
+  } | null>(null);
 
   useEffect(() => {
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -180,38 +195,50 @@ export default function SchedulePage() {
 
 // Modify handleDisableClass function
 const handleDisableClass = async (subject: string, shouldDisable: boolean, startTime: string) => {
-    try {
-        const response = await axios.post('/api/disableClass', {
-            subjectName: subject,
-            date: selectedDate.toISOString(),
-            startTime,
-            isDisabled: shouldDisable
-        });
+  // If trying to enable a holiday class, show confirmation
+  const period = timetable?.periods.find(p => p.subject === subject && p.startTime === startTime);
+  if (!shouldDisable && period?.isHoliday) {
+    setShowHolidayConfirmation(true);
+    setPendingEnableAction({ subject, startTime });
+    return;
+  }
 
-        // Update local state
-        if (timetable) {
-            const updatedPeriods = timetable.periods.map(period => {
-                if (period.subject === subject && period.startTime === startTime) {
-                    return {
-                        ...period,
-                        disabled: shouldDisable,
-                        attended: shouldDisable ? false : period.attended,
-                        allHappened: response.data.allHappened,
-                        allAttended: response.data.allAttended
-                    };
-                }
-                return period;
-            });
-            setTimetable({ ...timetable, periods: updatedPeriods });
+  await updateClassStatus(subject, shouldDisable, startTime);
+}
+
+const updateClassStatus = async (subject: string, shouldDisable: boolean, startTime: string) => {
+  try {
+    const response = await axios.post('/api/disableClass', {
+      subjectName: subject,
+      date: selectedDate.toISOString(),
+      startTime,
+      isDisabled: shouldDisable
+    });
+
+    // Update local state
+    if (timetable) {
+      const updatedPeriods = timetable.periods.map(period => {
+        if (period.subject === subject && period.startTime === startTime) {
+          return {
+            ...period,
+            disabled: shouldDisable,
+            attended: shouldDisable ? false : period.attended,
+            allHappened: response.data.allHappened,
+            allAttended: response.data.allAttended
+          };
         }
-        toast.success(shouldDisable ? 'Class disabled successfully' : 'Class enabled successfully');
-    } catch (error) {
-        toast.error(
-          axios.isAxiosError(error) 
-            ? error.response?.data?.error 
-            : `Failed to ${shouldDisable ? 'disable' : 'enable'} class`
-        );
+        return period;
+      });
+      setTimetable({ ...timetable, periods: updatedPeriods });
     }
+    toast.success(shouldDisable ? 'Class disabled successfully' : 'Class enabled successfully');
+  } catch (error) {
+    toast.error(
+      axios.isAxiosError(error) 
+        ? error.response?.data?.error 
+        : `Failed to ${shouldDisable ? 'disable' : 'enable'} class`
+    );
+  }
 }
 
 // Modify handleTopicsUpdate function
@@ -382,6 +409,36 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
           ))}
         </div>
       </div>
+
+      <AlertDialog open={showHolidayConfirmation} onOpenChange={setShowHolidayConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enable Holiday Class?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This class is marked as a holiday. Enabling it might affect attendance records. Are you sure you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowHolidayConfirmation(false);
+              setPendingEnableAction(null);
+            }}
+            className='text-black'
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (pendingEnableAction) {
+                updateClassStatus(pendingEnableAction.subject, false, pendingEnableAction.startTime);
+                setShowHolidayConfirmation(false);
+                setPendingEnableAction(null);
+              }
+            }}>
+              Enable Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -16,12 +16,24 @@ import axios from 'axios'
 import { useTimetable } from '@/hooks/useAppData'
 import { PresetCreationDrawer } from "@/components/PresetCreationDrawer"
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 
 export default function ProfilePage() {
 
   const [selectedPreset, setSelectedPreset] = useState<string>('')
   const [presets, setPresets] = useState<Preset[]>([])
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingPresetId, setPendingPresetId] = useState<string | null>(null);
   const router = useRouter()
   const { applyPreset } = useTimetable()
 
@@ -58,30 +70,30 @@ export default function ProfilePage() {
   }, [])
 
   const handleApplyPreset = async (presetId: string) => {
-    // Only show confirmation if there's a current preset
     if (currentPreset) {
-      const confirmed = window.confirm(
-        "Changing timetable will delete today's attendance records. Are you sure you want to proceed?"
-      );
+      setShowConfirmDialog(true);
+      setPendingPresetId(presetId);
+      return;
+    }
+    
+    // If no current preset, proceed directly
+    await applyPresetChanges(presetId);
+  };
 
-      if (!confirmed) {
-        return;
+  const applyPresetChanges = async (presetId: string) => {
+    try {
+      if (currentPreset) {
+        await axios.delete('/api/classinfo');
       }
       
-      // Delete existing records only if there's a current preset
-      await axios.delete('/api/classinfo');
-    }
-
-    try {
-      await applyPreset.mutateAsync(presetId)
+      await applyPreset.mutateAsync(presetId);
       await axios.post('/api/classinfo');
       
-      toast.success('Timetable updated successfully')
-      router.push('/start')
-
+      toast.success('Timetable updated successfully');
+      router.push('/start');
     } catch (error) {
-      console.error('Failed to apply preset:', error)
-      toast.error('Failed to update timetable')
+      console.error('Failed to apply preset:', error);
+      toast.error('Failed to update timetable');
     }
   };
 
@@ -153,6 +165,35 @@ export default function ProfilePage() {
                     </CardContent>
                 </Card>
             </div>
+            <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Timetable Change</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Changing timetable will delete today's attendance records. Are you sure you want to proceed?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => {
+                            setShowConfirmDialog(false);
+                            setPendingPresetId(null);
+                        }}
+                        className='text-black'
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                            if (pendingPresetId) {
+                                applyPresetChanges(pendingPresetId);
+                                setShowConfirmDialog(false);
+                                setPendingPresetId(null);
+                            }
+                        }}>
+                            Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

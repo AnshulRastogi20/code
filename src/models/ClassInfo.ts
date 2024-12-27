@@ -74,6 +74,22 @@ const classInfoSchema = new mongoose.Schema({
 { timestamps: true });
 
 classInfoSchema.pre<ClassInfoInterface>('validate', function (next) {
+    // Clean up holiday class data
+    this.subject.forEach((subject:SubjectInfo) => {
+      subject.allclasses.forEach((cls) => {
+        if (cls.isHoliday) {
+          // Preserve only date and isHoliday fields
+          cls.startTime = '';
+          cls.endTime = '';
+          cls.happened = false;
+          cls.attended = false;
+          cls.topicsCovered = [];
+          cls.temporarySubject = null;
+          cls.exchangeEndDate = null;
+        }
+      });
+    });
+
     let validationError = null;
     
     this.subject.forEach((subject:SubjectInfo) => {
@@ -101,8 +117,6 @@ classInfoSchema.pre<ClassInfoInterface>('validate', function (next) {
     
     next(validationError);
 });
-
-
 
 // Add pre-save middleware to handle temporary exchanges
 classInfoSchema.pre('save', function(next) {

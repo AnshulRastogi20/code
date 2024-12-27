@@ -92,14 +92,14 @@ export default function ExchangePage() {
   if (!timetable) return <div>Loading...</div>;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white/10 backdrop-blur-sm shadow-lg rounded-xl border border-gray-700">
-      <h1 className="text-3xl font-bold mb-6 text-white text-center">Exchange Periods</h1>
+    <div className="p-6 max-w-3xl mx-auto bg-white shadow-lg rounded-xl border border-gray-200">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">Exchange Periods</h1>
       
       <div className="space-y-6">
-        <div className="border border-gray-700 p-6 rounded-xl bg-white/5 shadow-lg hover:shadow-xl transition-all">
-          <h2 className="text-xl font-semibold mb-4 text-black">First Period</h2>
+        <div className="border border-gray-200 p-6 rounded-xl bg-gray-50 shadow-sm hover:shadow-md transition-all">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">First Period</h2>
           <select
-            className="w-full mb-3 p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full mb-3 p-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={firstPeriod.day}
             onChange={(e) => setFirstPeriod({ ...firstPeriod, day: e.target.value })}
           >
@@ -111,7 +111,7 @@ export default function ExchangePage() {
 
           {firstPeriod.day && (
             <select
-              className="w-full p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={`${firstPeriod.startTime}-${firstPeriod.endTime}`}
               onChange={(e) => {
                 const [startTime, endTime] = e.target.value.split('-');
@@ -133,10 +133,10 @@ export default function ExchangePage() {
           )}
         </div>
 
-        <div className="border border-gray-700 p-6 rounded-xl bg-white/5 shadow-lg hover:shadow-xl transition-all">
-          <h2 className="text-xl font-semibold mb-4 text-black">Second Period</h2>
+        <div className="border border-gray-200 p-6 rounded-xl bg-gray-50 shadow-sm hover:shadow-md transition-all">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">Second Period</h2>
           <select
-            className="w-full mb-3 p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full mb-3 p-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={secondPeriod.day}
             onChange={(e) => setSecondPeriod({ ...secondPeriod, day: e.target.value })}
           >
@@ -148,7 +148,7 @@ export default function ExchangePage() {
 
           {secondPeriod.day && (
             <select
-              className="w-full p-2.5 border border-gray-700 rounded-lg text-white bg-black/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={`${secondPeriod.startTime}-${secondPeriod.endTime}`}
               onChange={(e) => {
                 const [startTime, endTime] = e.target.value.split('-');
@@ -170,18 +170,18 @@ export default function ExchangePage() {
           )}
         </div>
 
-        <div className="border p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow mt-4">
-          <h2 className="text-xl font-semibold mb-4 text-black">Exchange Duration</h2>
+        <div className="border border-gray-200 p-6 rounded-xl bg-gray-50 shadow-sm hover:shadow-md transition-all">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">Exchange Duration</h2>
           <div className="flex items-center gap-4">
             <input
               type="date"
-              className="flex-1 p-2.5 border rounded-md text-black bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 p-2.5 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               min={new Date().toISOString().split('T')[0]}
             />
             <button
-              className="text-blue-500 hover:text-blue-600"
+              className="text-blue-600 hover:text-blue-700"
               onClick={() => setEndDate('')}
             >
               Clear
@@ -192,11 +192,11 @@ export default function ExchangePage() {
           </p>
         </div>
 
-        {error && <p className="text-red-500 text-center font-medium">{error}</p>}
+        {error && <p className="text-red-600 text-center font-medium">{error}</p>}
         
         <button
-          className="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 disabled:bg-gray-600 
-                     transition-colors duration-200 font-semibold text-lg shadow-lg hover:shadow-xl"
+          className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 
+                     disabled:text-gray-500 transition-colors duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
           onClick={handleExchange}
           disabled={loading || !firstPeriod.day || !secondPeriod.day}
         >
