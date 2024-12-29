@@ -84,7 +84,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Required data not found' }, { status: 404 })
         }
 
-        // Get day of week for the holiday date (0 = Sunday, 1 = Monday, etc.)
         const dayOfWeek = holidayDate.getDay()
         const daySchedule = timetable.schedule.find((day:DaySchedule) => 
             day.day.toLowerCase() === [
@@ -97,41 +96,42 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No schedule found for this day' }, { status: 400 })
         }
 
-        // For each period in the day's schedule, create or update class records
-        daySchedule.periods.forEach((period:Period) => {
-            const subjectIndex = classInfo.subject.findIndex((s:SubjectInfo) => s.name === period.subject)
-            
-            if (subjectIndex !== -1) {
-                // Check if class record already exists
-                const existingClassIndex = classInfo.subject[subjectIndex].allclasses.findIndex(
-                    (cls:allClasses) => cls.date.toDateString() === holidayDate.toDateString() &&
-                          cls.startTime === period.startTime
-                )
-
-                const classData = {
-                    date: holidayDate,
-                    startTime: period.startTime,
-                    endTime: period.endTime,
-                    isHoliday: true,
-                    happened: false,
-                    attended: false,
-                    topicsCovered: []
-                }
-
-                if (existingClassIndex !== -1) {
-                    // Update existing record
-                    classInfo.subject[subjectIndex].allclasses[existingClassIndex] = {
-                        ...classInfo.subject[subjectIndex].allclasses[existingClassIndex],
-                        ...classData
-                    }
-                } else {
-                    // Create new record
-                    classInfo.subject[subjectIndex].allclasses.push(classData)
-                }
+        // Process each period using MongoDB updates
+        for (const period of daySchedule.periods) {
+            const classData = {
+                date: holidayDate,
+                startTime: period.startTime,
+                endTime: period.endTime,
+                isHoliday: true,
+                happened: false,
+                attended: false,
+                topicsCovered: []
             }
-        })
 
-        await classInfo.save()
+            // Simplified update query
+            await ClassInfo.findOneAndUpdate(
+                {
+                    userId: user._id,
+                    'subject.name': period.subject
+                },
+                {
+                    $set: {
+                        'subject.$[elem].allclasses': [
+                            ...classInfo.subject.find((s:SubjectInfo) => s.name === period.subject)?.allclasses.filter(
+                                (cls:allClasses )=> cls.date.toDateString() !== holidayDate.toDateString() || 
+                                      cls.startTime !== period.startTime
+                            ) || [],
+                            classData
+                        ]
+                    }
+                },
+                {
+                    arrayFilters: [{ 'elem.name': period.subject }],
+                    new: true
+                }
+            )
+        }
+
         return NextResponse.json({ success: true })
 
     } catch (error) {
