@@ -42,6 +42,7 @@ export async function GET() {
                     date: cls.date,
                     isHoliday: cls.isHoliday,
                     happened: cls.happened,
+                    attended: cls.attended, // Add attended status
                     subject: subject.name,
                     startTime: cls.startTime,
                     endTime: cls.endTime,
@@ -140,3 +141,5 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 }
+
+

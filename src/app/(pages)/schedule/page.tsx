@@ -7,10 +7,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {  ArrowLeftRight } from 'lucide-react'
 import axios from 'axios'
-import { toast } from 'sonner'
+import { toast } from 'react-hot-toast'
 import { Checkbox } from '@/components/ui/checkbox'
-
+import { Calendar } from "@/components/ui/calendar"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer"
 import { Input } from '@/components/ui/input'
+import { Label } from "@/components/ui/label"
 import Link from 'next/link'
 import { Badge } from "@/components/ui/badge"
 import { allClasses, SubjectInfo } from '@/types'
@@ -24,6 +26,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
+import { Input as TimeInput } from "@nextui-org/react"
 
 // import { Period } from '@/types'
 
@@ -68,6 +71,21 @@ export default function SchedulePage() {
     subject: string;
     startTime: string;
   } | null>(null);
+  const [showAddClass, setShowAddClass] = useState(false)
+  const [validTill, setValidTill] = useState<Date>()
+  const [newClass, setNewClass] = useState({
+    subject: '',
+    startTime: '12:00',  // Set default times
+    endTime: '13:00',
+    startPeriod: 'PM',
+    endPeriod: 'PM'
+  })
+  const [originalValues, setOriginalValues] = useState<{
+    [key: string]: {
+        attended?: boolean;
+        topicsCovered?: string;
+    };
+  }>({});
 
   useEffect(() => {
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -148,7 +166,23 @@ export default function SchedulePage() {
 
 
   const handleAttendanceChange = async (subject: string, attended: boolean, startTime: string) => {
-    setChangedPeriods(prev => ({ ...prev, [subject + startTime]: true }));
+    const key = `${subject}-${startTime}`;
+        
+    // Store original value if not already stored
+    if (!originalValues[key]) {
+        const period = timetable?.periods.find(p => 
+            p.subject === subject && p.startTime === startTime
+        );
+        setOriginalValues(prev => ({
+            ...prev,
+            [key]: { attended: period?.attended, topicsCovered: period?.topicsCovered }
+        }));
+    }
+
+    setChangedPeriods(prev => ({
+        ...prev,
+        [key]: originalValues[key]?.attended !== attended
+    }));
     try {
         const response = await axios.post('/api/attendance/update', {
             subjectName: subject,
@@ -243,7 +277,23 @@ const updateClassStatus = async (subject: string, shouldDisable: boolean, startT
 
 // Modify handleTopicsUpdate function
 const handleTopicsUpdate = async (subject: string, topics: string, startTime: string) => {
-  setChangedPeriods(prev => ({ ...prev, [subject + startTime]: true }));
+  const key = `${subject}-${startTime}`;
+        
+  // Store original value if not already stored
+  if (!originalValues[key]) {
+      const period = timetable?.periods.find(p => 
+          p.subject === subject && p.startTime === startTime
+      );
+      setOriginalValues(prev => ({
+          ...prev,
+          [key]: { attended: period?.attended, topicsCovered: period?.topicsCovered }
+      }));
+  }
+
+  setChangedPeriods(prev => ({
+      ...prev,
+      [key]: originalValues[key]?.topicsCovered !== topics
+  }));
   
   // Update local state immediately
   if (timetable) {
@@ -275,6 +325,7 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
 }
 
 const handleSaveChanges = async (subject: string, startTime: string) => {
+  const key = `${subject}-${startTime}`;
   try {
     const period = timetable?.periods.find(p => p.subject === subject && p.startTime === startTime);
     if (period) {
@@ -285,8 +336,17 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
         date: selectedDate.toISOString(),
         startTime
       });
+      
+      // Update original values after successful save
+      setOriginalValues(prev => ({
+          ...prev,
+          [key]: {
+              attended: period.attended,
+              topicsCovered: period.topicsCovered
+          }
+      }));
+      setChangedPeriods(prev => ({ ...prev, [key]: false }));
       toast.success('Changes saved');
-      setChangedPeriods(prev => ({ ...prev, [subject + startTime]: false }));
     }
   } catch (error) {
     console.error('Failed:', error)
@@ -294,6 +354,68 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
   }
 }
 
+
+
+// Add time conversion helper
+const convertTo24Hour = (time: string, period: string) => {
+  if (!time) return ''
+  const [hours, minutes] = time.split(':')
+  let hour = parseInt(hours)
+  
+  if (period === 'PM' && hour < 12) {
+      hour += 12
+  } else if (period === 'AM' && hour === 12) {
+      hour = 0
+  }
+  
+  return `${hour.toString().padStart(2, '0')}:${minutes}`
+}
+
+const convertTo12Hour = (time: string) => {
+  if (!time) return ''
+  const [hours, minutes] = time.split(':')
+  let hour = parseInt(hours)
+  
+  // Convert hour to 12-hour format
+  if (hour > 12) {
+      hour = hour - 12
+  } else if (hour === 0) {
+      hour = 12
+  }
+  
+  return `${hour.toString().padStart(2, '0')}:${minutes}`
+}
+
+const handleAddClass = async () => {
+  try {
+      // Format date properly for UTC storage
+      const formattedDate = validTill ? new Date(Date.UTC(
+          validTill.getFullYear(),
+          validTill.getMonth(),
+          validTill.getDate(),
+          0, 0, 0, 0
+      )).toISOString() : null;
+
+      const formattedClass = {
+          subject: newClass.subject,
+          startTime: convertTo12Hour(newClass.startTime),
+          endTime: convertTo12Hour(newClass.endTime),
+          validTill: formattedDate
+      }
+
+      console.log('Sending data:', formattedClass) // For debugging
+      const response = await axios.post('/api/schedule/add-class', formattedClass)
+
+      if (response.status === 200) {
+          setShowAddClass(false)
+          fetchTodaySchedule()
+          toast.success('Class added successfully')
+      }
+  } catch (error) {
+      console.error('Failed to add class:', error)
+      toast.error('Failed to add class')
+  }
+}
 
 
   if (status === 'loading' || isLoading) {
@@ -316,15 +438,25 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
               {dateDisplay} {monthName}
             </h1>
           </div>
-          <Link href="/exchange">
+          <div className="flex gap-4 mb-4 " >
             <Button 
-              variant="outline" 
-              className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm"
+                onClick={() => setShowAddClass(true)}
+                variant="outline" 
+
+                className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm"
             >
-              <ArrowLeftRight className="h-4 w-4 mr-2" />
-              Exchange Periods
+                Add a Class
             </Button>
-          </Link>
+            <Link href="/exchange">
+              <Button 
+                variant="outline" 
+                className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm"
+              >
+                <ArrowLeftRight className="h-4 w-4 mr-2" />
+                Exchange Periods
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -395,7 +527,7 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
                     className="bg-white/5 border-gray-700 text-gray-700 text-sm h-9 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
                   />
 
-                  {changedPeriods[period.subject + period.startTime] && (
+                  {changedPeriods[`${period.subject}-${period.startTime}`] && (
                     <Button 
                       onClick={() => handleSaveChanges(period.subject, period.startTime)}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto shadow-sm"
@@ -439,6 +571,104 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add Class Drawer */}
+      <Drawer open={showAddClass} onOpenChange={setShowAddClass}>
+        <DrawerContent className="bg-gray-900 border-t border-gray-700">
+            <DrawerHeader>
+                <DrawerTitle>Add New Class</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 space-y-4">
+                <div className="space-y-2 ">
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input
+                        id="subject"
+                        value={newClass.subject}
+                        onChange={(e) => setNewClass(prev => ({
+                            ...prev,
+                            subject: e.target.value
+                        }))}
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-white">
+                    <div className="space-y-2">
+                        <Label htmlFor="startTime">Start Time</Label>
+                        <div className="flex gap-2 text-white">
+                            <TimeInput
+                                id="startTime"
+                                type="time"
+                                value={newClass.startTime}
+                                variant="bordered"
+                                radius="sm"
+                                onChange={(e) => setNewClass(prev => ({
+                                    ...prev,
+                                    startTime: e.target.value
+                                }))}
+                                className="max-w-[200px] flex-1"
+                                classNames={{
+                                    input: "bg-white/5 text-white",
+                                    innerWrapper: "bg-transparent",
+                                    inputWrapper: "bg-transparent border-gray-700 hover:border-gray-600"
+                                }}
+                            />
+                            
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="endTime">End Time</Label>
+                        <div className="flex gap-2">
+                            <TimeInput
+                                id="endTime"
+                                type="time"
+                                value={newClass.endTime}
+                                variant="bordered"
+                                radius="sm"
+                                onChange={(e) => setNewClass(prev => ({
+                                    ...prev,
+                                    endTime: e.target.value
+                                }))}
+                                className="max-w-[200px] flex-1 text-white"
+                                classNames={{
+                                    input: "bg-white/5 text-white",
+                                    innerWrapper: "bg-transparent",
+                                    inputWrapper: "bg-transparent border-gray-700 hover:border-gray-600"
+                                }}
+                            />
+                            
+                        </div>
+                    </div>
+                </div>
+                <div className="space-y-2 ">
+                    <Label>Valid Till</Label>
+                    <Calendar
+                        mode="single"
+                        selected={validTill}
+                        onSelect={setValidTill}
+                        disabled={(date) => date < new Date()}
+                        className="rounded-md border content-center"
+                    />
+                </div>
+                <div className="flex justify-end gap-4">
+                    <DrawerClose asChild>
+                        <Button 
+                        variant="outline"
+                        className='text-black'
+                        >
+                          Cancel
+                        </Button>
+                    </DrawerClose>
+                    <Button 
+                        variant="outline"
+                        onClick={handleAddClass}
+                        className='text-black'
+                        disabled={!newClass.subject || !newClass.startTime || !newClass.endTime || !validTill}
+                    >
+                        Add Class
+                    </Button>
+                </div>
+            </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

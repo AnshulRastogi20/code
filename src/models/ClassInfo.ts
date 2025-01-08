@@ -16,64 +16,81 @@ const classInfoSchema = new mongoose.Schema({
             required: true
         },
         allclasses: [{
-            date: {
-                type: Date,
-                required: true
-            },
-            startTime: {
+          date: {
+            type: Date,
+            required: true
+          },
+          startTime: {
                 type: String,
-                required: true
-            },
-            endTime: {
+                required: false
+              },
+              endTime: {
                 type: String,
-                required: true
-            },
-            isHoliday: { 
+                required: false
+              },
+              isHoliday: { 
                 type: Boolean, 
                 default: false 
-            },
-            happened: {
+              },
+              happened: {
                 type: Boolean,
                 required: true,
                 default: false,
                 
-            },
-            attended: {
+              },
+              attended: {
                 type: Boolean,
                 default: false,
                 required: true,
                 
-            },
-            topicsCovered: {
+              },
+              topicsCovered: {
                 type: [String],
                 default: []
-            },
-            temporarySubject: {
+              },
+              temporarySubject: {
                 type: mongoose.Schema.Types.Mixed,
                 default: null,
                 required: false
-            },
-            exchangeEndDate: {
+              },
+              exchangeEndDate: {
                 type: mongoose.Schema.Types.Mixed,
                 default: null,
                 required: false
+              }
+            }],
+            allHappened:{
+              type: Number,
+            },
+            
+            allAttended:{
+              type: Number,
             }
-        }],
-        allHappened:{
-            type: Number,
-        },
+            
+          }],
+          
+          
+        }, 
+        { timestamps: true });
+        
 
-        allAttended:{
-            type: Number,
-        }
+classInfoSchema.pre('save', function(next) {
+  this.subject.forEach(subj => {
+    subj.allHappened = subj.allclasses.filter(cls => cls.happened).length;
+    subj.allAttended = subj.allclasses.filter(cls => cls.attended).length;
+  });
+  next();
+});
+// classInfoSchema.pre('findOneAndUpdate', function(next) {
+//   this.subject.forEach(subj => {
+//     subj.allHappened = subj.allclasses.filter(cls => cls.happened).length;
+//     subj.allAttended = subj.allclasses.filter(cls => cls.attended).length;
+//   });
+//   next();
+// });
 
-    }],
-    
 
-}, 
-{ timestamps: true });
-
-classInfoSchema.pre<ClassInfoInterface>('validate', function (next) {
+    classInfoSchema.pre<ClassInfoInterface>('validate', function (next) {
     // Clean up holiday class data
     this.subject.forEach((subject:SubjectInfo) => {
       subject.allclasses.forEach((cls) => {
@@ -143,5 +160,9 @@ classInfoSchema.pre('save', function(next) {
     
     next();
   });
+
+
+
+  // Add pre-save middleware to update attendance counts
 
 export const ClassInfo = mongoose.models.ClassInfo || mongoose.model('ClassInfo', classInfoSchema);

@@ -4,7 +4,7 @@ import { ClassInfo } from '@/models/ClassInfo'
 import { User } from '@/models/User'
 import { connectDB } from '@/lib/db'
 import { authOptions } from '../auth/[...nextauth]/options'
-import { ClassEntry, SubjectInfo } from '@/types'
+import { allClasses, ClassEntry, SubjectInfo } from '@/types'
 
 export async function POST(req: Request) {
     try {
@@ -42,13 +42,6 @@ export async function POST(req: Request) {
         if (debugDoc) {
             const subject = debugDoc.subject.find((s:SubjectInfo) => s.name === subjectName)
             console.log('Found subject:', subject?.name)
-            if (subject) {
-                const classToUpdate = subject.allclasses.find(
-                    (c: ClassEntry) => new Date(c.date).toISOString().split('T')[0] === 
-                         today.toISOString().split('T')[0]
-                )
-                console.log('Found class:', classToUpdate)
-            }
         }
 
         // Simplified update query

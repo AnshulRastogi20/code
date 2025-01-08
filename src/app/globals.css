@@ -70,3 +70,11 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Add these lines at the end of your globals.css */
+@supports (backdrop-filter: blur(1px)) {
+  .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}

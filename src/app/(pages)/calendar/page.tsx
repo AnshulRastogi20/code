@@ -1,25 +1,16 @@
 'use client'
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 import { Calendar } from '@/components/ui/calendar'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog"
+import { CalendarData } from '@/types'
+import { Switch } from "@/components/ui/switch"
 
-interface CalendarData {
-    date: string
-    isHoliday: boolean
-    happened: boolean
-    subject: string
-    startTime: string
-    endTime: string
-    topicsCovered: string[]
-    temporaryExchange?: {
-        originalSubject: string;
-        exchangeEndDate: Date;
-    } | null;
-}
+
 
 export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState<Date>()
@@ -27,24 +18,42 @@ export default function CalendarPage() {
     const [selectedClass, setSelectedClass] = useState<CalendarData | null>(null)
     const [showTopics, setShowTopics] = useState(false)
     const [showHolidayConfirm, setShowHolidayConfirm] = useState(false)
+    const [showAttendanceConfirm, setShowAttendanceConfirm] = useState(false)
+    const [selectedAttendance, setSelectedAttendance] = useState<{
+        subject: string;
+        date: string;
+        startTime: string;
+        current: boolean;
+    } | null>(null)
+    const [selectedHappened, setSelectedHappened] = useState<{
+        subject: string;
+        date: string;
+        startTime: string;
+        current: boolean;
+    } | null>(null)
+    const [showHappenedConfirm, setShowHappenedConfirm] = useState(false)
 
     useEffect(() => {
         fetchCalendarData()
     }, [])
 
     const fetchCalendarData = async () => {
-        const response = await fetch('/api/calendar')
-        const data = await response.json()
-        setCalendarData(data.calendarData)
+        try {
+            const { data } = await axios.get('/api/calendar')
+            setCalendarData(data.calendarData)
+        } catch (error) {
+            console.error('Failed to fetch calendar data:', error)
+        }
     }
 
     const markHoliday = async (date: Date) => {
-        const response = await fetch('/api/calendar', {
-            method: 'POST',
-            body: JSON.stringify({ date })
-        })
-        if (response.ok) {
-            fetchCalendarData()
+        try {
+            const response = await axios.post('/api/calendar', { date })
+            if (response.status === 200) {
+                await fetchCalendarData()
+            }
+        } catch (error) {
+            console.error('Failed to mark holiday:', error)
         }
     }
 
@@ -66,6 +75,87 @@ export default function CalendarPage() {
     const confirmMarkHoliday = async () => {
         await markHoliday(selectedDate!)
         setShowHolidayConfirm(false)
+    }
+
+    const handleAttendanceChange = async (confirmed: boolean) => {
+        if (!confirmed || !selectedAttendance) {
+            setShowAttendanceConfirm(false)
+            return
+        }
+
+        try {
+            const response = await axios.patch('/api/calendar/attended', {
+                subject: selectedAttendance.subject,
+                date: selectedAttendance.date,
+                startTime: selectedAttendance.startTime,
+                attended: !selectedAttendance.current
+            })
+
+            if (response.status === 200 && response.data.success) {
+                // Update the local state immediately
+                setCalendarData(prevData => 
+                    prevData.map(cls => 
+                        cls.subject === selectedAttendance.subject &&
+                        cls.date === selectedAttendance.date &&
+                        cls.startTime === selectedAttendance.startTime
+                            ? { ...cls, attended: !selectedAttendance.current }
+                            : cls
+                    )
+                )
+            }
+        } catch (error) {
+            console.error('Failed to update attendance:', error)
+        }
+
+        setShowAttendanceConfirm(false)
+    }
+
+    const handleHappenedChange = async (confirmed: boolean) => {
+        if (!confirmed || !selectedHappened) {
+            setShowHappenedConfirm(false)
+            return
+        }
+
+        try {
+            const response = await axios.patch('/api/calendar/happened', {
+                subject: selectedHappened.subject,
+                date: selectedHappened.date,
+                startTime: selectedHappened.startTime,
+                happened: !selectedHappened.current
+            })
+
+            if (response.status === 200 && response.data.success) {
+                setCalendarData(prevData => 
+                    prevData.map(cls => 
+                        cls.subject === selectedHappened.subject &&
+                        cls.date === selectedHappened.date &&
+                        cls.startTime === selectedHappened.startTime
+                            ? { ...cls, happened: !selectedHappened.current }
+                            : cls
+                    )
+                )
+            }
+        } catch (error) {
+            console.error('Failed to update happened status:', error)
+        }
+
+        setShowHappenedConfirm(false)
+    }
+
+    const handleAddSchedule = async () => {
+        if (!selectedDate) return;
+        
+        try {
+            const response = await axios.post('/api/calendar/add-schedule', { 
+                date: selectedDate 
+            });
+            
+            if (response.status === 200) {
+                await fetchCalendarData()
+            }
+        } catch (error) {
+            console.error('Failed to add schedule:', error)
+        }
     }
 
     return (
@@ -125,29 +215,86 @@ export default function CalendarPage() {
                                                 getClassesForDate(selectedDate).map((cls, idx) => (
                                                     <div
                                                         key={idx}
-                                                        className="p-4 border border-gray-700 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-all"
-                                                        onClick={() => {
-                                                            setSelectedClass(cls)
-                                                            setShowTopics(true)
-                                                        }}
+                                                        className="p-4 border border-gray-700 rounded-xl bg-white/5 flex items-center justify-between"
                                                     >
-                                                        <div className="flex items-center gap-2">
-                                                            <h3>{cls.subject}</h3>
-                                                            {cls.temporaryExchange && (
-                                                                <Badge 
-                                                                    variant="outline" 
-                                                                    className="ml-2"
-                                                                >
-                                                                    Original: {cls.temporaryExchange.originalSubject}
-                                                                </Badge>
-                                                            )}
+                                                        <div 
+                                                            className="cursor-pointer flex-grow"
+                                                            onClick={() => {
+                                                                setSelectedClass(cls)
+                                                                setShowTopics(true)
+                                                            }}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <h3>{cls.subject}</h3>
+                                                                {cls.temporaryExchange && (
+                                                                    <Badge 
+                                                                        variant="outline" 
+                                                                        className="ml-2 text-white"
+                                                                    >
+                                                                        Original: {cls.temporaryExchange.originalSubject}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <p>{cls.startTime} - {cls.endTime}</p>
                                                         </div>
-                                                        <p>{cls.startTime} - {cls.endTime}</p>
+                                                        <div className="flex items-center gap-2 flex-col">
+                                                            <div className="flex items-center gap-2 w-full justify-end">
+                                                                <Badge 
+                                                                    variant={cls.happened ? "default" : "secondary"}
+                                                                    className={cls.happened ? "bg-blue-500 hover:bg-blue-600" : ""}
+                                                                >
+                                                                    {cls.happened ? "Happened" : "Not Happened"}
+                                                                </Badge>
+                                                                <Switch
+                                                                    checked={cls.happened}
+                                                                    onCheckedChange={() => {
+                                                                        setSelectedHappened({
+                                                                            subject: cls.subject,
+                                                                            date: cls.date,
+                                                                            startTime: cls.startTime,
+                                                                            current: cls.happened
+                                                                        })
+                                                                        setShowHappenedConfirm(true)
+                                                                    }}
+                                                                    className="bg-gray-600"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center gap-2 w-full justify-end">
+                                                                <Badge 
+                                                                    variant={cls.attended ? "default" : "secondary"}
+                                                                    className={cls.attended ? "bg-green-500 hover:bg-green-600" : ""}
+                                                                >
+                                                                    {cls.attended ? "Attended" : "Absent"}
+                                                                </Badge>
+                                                                <Switch
+                                                                    checked={cls.attended}
+                                                                    disabled={!cls.happened}
+                                                                    onCheckedChange={() => {
+                                                                        setSelectedAttendance({
+                                                                            subject: cls.subject,
+                                                                            date: cls.date,
+                                                                            startTime: cls.startTime,
+                                                                            current: cls.attended
+                                                                        })
+                                                                        setShowAttendanceConfirm(true)
+                                                                    }}
+                                                                    className="bg-gray-600"
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 ))
                                             ) : (
-                                                <div className="p-4 text-center">
+                                                <div className="p-4 flex items-center justify-between">
                                                     <p>No Schedule for this date</p>
+                                                    {selectedDate && new Date(selectedDate) < new Date() && (
+                                                        <Button 
+                                                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                                                            onClick={handleAddSchedule}
+                                                        >
+                                                            Add Schedule
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -202,6 +349,50 @@ export default function CalendarPage() {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                <AlertDialog open={showAttendanceConfirm} onOpenChange={setShowAttendanceConfirm}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Change Attendance Status?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to change the class attendance status? This will affect your attendance record.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel 
+                            onClick={() => handleAttendanceChange(false)}
+                            className='text-black'
+                            >
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleAttendanceChange(true)}>
+                                Continue
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog open={showHappenedConfirm} onOpenChange={setShowHappenedConfirm}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Change Class Status?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to change the class happened status?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel 
+                                onClick={() => handleHappenedChange(false)}
+                                className='text-black'
+                            >
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleHappenedChange(true)}>
+                                Continue
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
                 <div className="flex gap-4 p-4 bg-gray-800/50 rounded-lg">
                     <Badge variant="outline" className="bg-blue-600/20 text-blue-400 border-blue-500">

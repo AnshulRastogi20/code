@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Clock, Calendar, PlayCircle, Ban } from 'lucide-react'
 import axios from 'axios'
-import { toast } from 'sonner'
+import { toast } from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import { Period, DaySchedule } from '@/types'
 

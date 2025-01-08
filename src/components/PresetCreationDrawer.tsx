@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/drawer"
 import { useState } from "react"
 import { Plus, Trash } from "lucide-react"
-import { toast } from "sonner"
+import { toast } from "react-hot-toast"
 import axios from 'axios'
 import { Period } from "@/types"
 

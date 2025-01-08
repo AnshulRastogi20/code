@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
-import { toast } from 'sonner'
+import { toast } from 'react-hot-toast'
 import { Badge } from "@/components/ui/badge"
 
 interface SubjectAttendance {

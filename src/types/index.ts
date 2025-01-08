@@ -93,3 +93,40 @@ export interface User {
     exchangeEndDate: Date | null;
   }
 
+  export interface Timetable {
+    _id: string;
+    userId: string;
+    presetId: string;
+    schedule: {
+      day: string;
+      periods: {
+        subject: string;
+        startTime: string;
+        endTime: string;
+        temporaryExchange?: {
+          originalSubject: string;
+          exchangeEndDate: Date;
+        };
+      }[];
+    }[];
+    createdAt?: Date;
+    updatedAt?: Date;
+  }
+
+
+
+  export interface CalendarData {
+      date: string
+      isHoliday: boolean
+      happened: boolean
+      subject: string
+      startTime: string
+      endTime: string
+      topicsCovered: string[]
+      temporaryExchange?: {
+          originalSubject: string;
+          exchangeEndDate: Date;
+      } | null;
+      attended: boolean;
+  }
+
