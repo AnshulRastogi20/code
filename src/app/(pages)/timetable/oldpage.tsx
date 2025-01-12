@@ -1,5 +1,5 @@
 'use client'
-
+import '@/app/globals.css'
 import { Preset } from '@/types'
 import { toast } from 'react-hot-toast' 
 import { useEffect, useState } from 'react'
@@ -99,7 +99,6 @@ export default function ProfilePage() {
 
     return (
         <div className="container mx-auto px-4 py-6">
-            <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
             
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Current Timetable Card - Moved to top */}

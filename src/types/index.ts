@@ -5,23 +5,39 @@ export interface User {
     email: string;
     image?: string;
   }
-  
+
   export interface Period {
+    // ...existing code...
+    isHoliday?: boolean;
+    happened?: boolean;
+    allAttended?: number;
+    allHappened?: number;
+    attended?: boolean;
     subject: string;
+    teacher: string;
     startTime: string;
     endTime: string;
-    teacher: string;
-    happened?: boolean;
-    attended?: boolean;
-    disabled?: boolean;
     topicsCovered?: string;
-    date:Date;
-    temporaryExchange: {
+    disabled?: boolean;
+    temporarySubject?: string | null;
+    originalSubject?: string;
+    temporaryExchange?: {
       originalSubject: string;
       exchangeEndDate: Date;
     } | null;
+    date:Date;
+  }
+ 
+  export interface SubjectAttendance {
+    name: string;
+    total: number;
+    attended: number;
+    percentage: number;
+    date: Date;
   }
   
+
+
   export interface allClasses {
     date: Date;
     startTime: string;

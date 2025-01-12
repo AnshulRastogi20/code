@@ -1,36 +1,40 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
 import { useState } from "react"
-import { Plus, Trash } from "lucide-react"
 import { toast } from "react-hot-toast"
 import axios from 'axios'
 import { Period } from "@/types"
-
-// type Period = {
-//   subject: string
-//   startTime: string
-//   endTime: string
-//   teacher: string
-// }
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  IconButton,
+  Stack,
+  useTheme,
+  Divider,
+  Drawer,
+} from '@mui/material'
+import { alpha } from '@mui/material/styles'
+import AddIcon from '@mui/icons-material/Add'
+import DeleteIcon from '@mui/icons-material/Delete'
+import { TimePicker } from '@mui/x-date-pickers/TimePicker'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
 
 type DaySchedule = {
   day: string
   periods: Period[]
 }
 
-export function PresetCreationDrawer() {
+interface PresetCreationDrawerProps {
+  onPresetCreated?: () => void;
+}
+
+export function PresetCreationDrawer({ onPresetCreated }: PresetCreationDrawerProps) {
+  const theme = useTheme()
+  const [open, setOpen] = useState(false)
   const [presetName, setPresetName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [schedule, setSchedule] = useState<DaySchedule[]>([
@@ -40,6 +44,7 @@ export function PresetCreationDrawer() {
     { day: "THURSDAY", periods: [] },
     { day: "FRIDAY", periods: [] },
     { day: "SATURDAY", periods: [] },
+    { day: "SUNDAY", periods: [] }
   ])
 
   const addPeriod = (dayIndex: number) => {
@@ -61,19 +66,36 @@ export function PresetCreationDrawer() {
     setSchedule(newSchedule)
   }
 
+  const formatTimeForBackend = (date: dayjs.Dayjs | null) => {
+    if (!date) return "";
+    return date.format("HH:mm");
+  }
+
+  const parseTimeString = (timeString: string) => {
+    if (!timeString) return null;
+    return dayjs(timeString, "HH:mm");
+  }
+
   const updatePeriod = (
     dayIndex: number,
     periodIndex: number,
     field: keyof Period,
-    value: string
+    value: string | dayjs.Dayjs | null
   ) => {
-    const newSchedule = [...schedule]
-    newSchedule[dayIndex].periods[periodIndex] = {
-      ...newSchedule[dayIndex].periods[periodIndex],
-      [field]: value
+    const newSchedule = [...schedule];
+    if (field === "startTime" || field === "endTime") {
+      newSchedule[dayIndex].periods[periodIndex] = {
+        ...newSchedule[dayIndex].periods[periodIndex],
+        [field]: dayjs.isDayjs(value) ? formatTimeForBackend(value) : value
+      };
+    } else {
+      newSchedule[dayIndex].periods[periodIndex] = {
+        ...newSchedule[dayIndex].periods[periodIndex],
+        [field]: value as string
+      };
     }
-    setSchedule(newSchedule)
-  }
+    setSchedule(newSchedule);
+  };
 
   const handleSubmit = async () => {
     if (!presetName.trim()) {
@@ -88,11 +110,7 @@ export function PresetCreationDrawer() {
         schedule: schedule,
         isDefault: false,
         createdBy: "user",
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
+      });
 
       toast.success("Preset created successfully!")
       setPresetName("")
@@ -103,7 +121,10 @@ export function PresetCreationDrawer() {
         { day: "THURSDAY", periods: [] },
         { day: "FRIDAY", periods: [] },
         { day: "SATURDAY", periods: [] },
+        { day: "SUNDAY", periods: [] }
       ])
+      setOpen(false);
+      onPresetCreated?.(); // Call the callback after successful creation
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error(error.response?.data?.error || "Failed to create preset")
@@ -117,124 +138,187 @@ export function PresetCreationDrawer() {
     }
   }
 
+  // Custom styles
+  const boxStyle = {
+    backgroundColor: alpha(theme.palette.background.default, 0.9),
+    borderRadius: theme.shape.borderRadius,
+    p: 2,
+    mb: 2
+  }
+
+  const inputStyle = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: alpha(theme.palette.background.paper, 0.8),
+    },
+    '& .MuiInputLabel-root': {
+      color: theme.palette.text.secondary,
+    },
+    mb: 2
+  }
+
   return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <Button className="w-full">Create New Timetable</Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <div className=" text-black mx-auto w-full max-w-4xl">
-          <DrawerHeader>
-            <DrawerTitle>Create New Timetable Preset</DrawerTitle>
-            <DrawerDescription>
-              Fill in the details for your new timetable preset.
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="p-4 pb-0">
-            <Input
-              placeholder="Preset Name"
-              value={presetName}
-              onChange={(e) => setPresetName(e.target.value)}
-              className="text-black mb-4"
-            />
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-              {schedule.map((day, dayIndex) => (
-                <div key={day.day} className="border p-4 rounded-lg">
-                  <h3 className="font-bold mb-2">{day.day}</h3>
-                  {day.periods.map((period, periodIndex) => (
-                    <div
-                      key={periodIndex}
-                      className="grid grid-cols-4 gap-2 mb-2"
-                    >
-                      <Input
-                        placeholder="Subject"
-                        value={period.subject}
-                        className="text-black"
-                        onChange={(e) =>
-                          updatePeriod(
-                            dayIndex,
-                            periodIndex,
-                            "subject",
-                            e.target.value
-                          )
-                        }
-                      />
-                      <Input
-                        placeholder="Start Time (HH:MM)"
-                        value={period.startTime}
-                        className="text-black"
-                        onChange={(e) =>
-                          updatePeriod(
-                            dayIndex,
-                            periodIndex,
-                            "startTime",
-                            e.target.value
-                          )
-                        }
-                      />
-                      <Input
-                        placeholder="End Time (HH:MM)"
-                        value={period.endTime}
-                        className="text-black"
-                        onChange={(e) =>
-                          updatePeriod(
-                            dayIndex,
-                            periodIndex,
-                            "endTime",
-                            e.target.value
-                          )
-                        }
-                      />
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Teacher"
-                          value={period.teacher}
-                          className="text-black"
-                          onChange={(e) =>
-                            updatePeriod(
-                              dayIndex,
-                              periodIndex,
-                              "teacher",
-                              e.target.value
-                            )
-                          }
+    <>
+      <Button
+        fullWidth
+        variant="contained"
+        onClick={() => setOpen(true)}
+        sx={{
+          backgroundColor: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText
+        }}
+      >
+        Create New Timetable
+      </Button>
+
+      <Drawer
+        anchor="bottom"
+        open={open}
+        onClose={() => setOpen(false)}
+        SlideProps={{
+          style: { position: 'absolute' }
+        }}
+      >
+        <Box
+          sx={{
+            maxHeight: '90vh',
+            backgroundColor: alpha(theme.palette.background.default, 0.95),
+            backdropFilter: 'blur(10px)',
+            width: '100%',
+            position: 'relative'
+          }}
+        >
+          <Box sx={{ 
+            maxWidth: '4xl',
+            mx: 'auto',
+            p: 4,
+            width: '100%'
+          }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+              <div>
+                <Typography variant="h5" color="textPrimary" gutterBottom>
+                  Create New Timetable Preset
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Fill in the details for your new timetable preset.
+                </Typography>
+              </div>
+              <Button onClick={() => setOpen(false)}>
+                Close
+              </Button>
+            </Stack>
+
+            <Box sx={{ mt: 3 }}>
+              <TextField
+                fullWidth
+                label="Preset Name"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                sx={inputStyle}
+              />
+              
+              <Box sx={{ maxHeight: '60vh', overflow: 'auto' }}>
+                {schedule.map((day, dayIndex) => (
+                  <Box key={day.day} sx={boxStyle}>
+                    <Typography variant="h6" gutterBottom>
+                      {day.day}
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                    
+                    {day.periods.map((period, periodIndex) => (
+                      <Stack 
+                        key={periodIndex}
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={2}
+                        sx={{ mb: 2 }}
+                      >
+                        <TextField
+                          label="Subject"
+                          value={period.subject}
+                          onChange={(e) => updatePeriod(dayIndex, periodIndex, "subject", e.target.value)}
+                          sx={inputStyle}
+                          fullWidth
                         />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => removePeriod(dayIndex, periodIndex)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addPeriod(dayIndex)}
-                    className="text-black mt-2"
-                  >
-                    <Plus className="text-black h-4 w-4 mr-2" />
-                    Add Period
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-          <DrawerFooter>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isLoading}
-            >
-              {isLoading ? "Saving..." : "Save Preset"}
-            </Button>
-            <DrawerClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </div>
-      </DrawerContent>
-    </Drawer>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <TimePicker
+                            label="Start Time"
+                            value={parseTimeString(period.startTime)}
+                            onChange={(newValue) => updatePeriod(dayIndex, periodIndex, "startTime", newValue)}
+                            sx={inputStyle}
+                            views={['hours', 'minutes']}
+                            format="HH:mm"
+                          />
+                          <TimePicker
+                            label="End Time"
+                            value={parseTimeString(period.endTime)}
+                            onChange={(newValue) => updatePeriod(dayIndex, periodIndex, "endTime", newValue)}
+                            sx={inputStyle}
+                            views={['hours', 'minutes']}
+                            format="HH:mm"
+                          />
+                        </LocalizationProvider>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <TextField
+                            label="Teacher"
+                            value={period.teacher}
+                            onChange={(e) => updatePeriod(dayIndex, periodIndex, "teacher", e.target.value)}
+                            sx={inputStyle}
+                            fullWidth
+                          />
+                          <IconButton 
+                            onClick={() => removePeriod(dayIndex, periodIndex)}
+                            color="error"
+                            sx={{ mt: -2 }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Stack>
+                      </Stack>
+                    ))}
+                    
+                    <Box component={Button}
+                      onClick={() => addPeriod(dayIndex)}
+                      sx={{
+                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                        gap: 1,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <AddIcon />
+                      Add Period
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={3}>
+              <Button
+                variant="outlined"
+                onClick={() => setOpen(false)}
+                sx={{ color: theme.palette.text.primary }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                onClick={async () => {
+                  await handleSubmit();
+                  setOpen(false);
+                }}
+                disabled={isLoading}
+                sx={{
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText
+                }}
+              >
+                {isLoading ? "Saving..." : "Save Preset"}
+              </Button>
+            </Stack>
+          </Box>
+        </Box>
+      </Drawer>
+    </>
   )
-} 
+}

@@ -24,7 +24,7 @@ export const config = {
     "/schedule/:path*",
     "/dashboard/:path*",
     "/attendance/:path*",
-    "/profile/:path*",
+    "/timetable/:path*",
     "/settings/:path*",
     "/calendar/:path*",
     "/exchange/:path*",

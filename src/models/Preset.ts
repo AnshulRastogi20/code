@@ -16,7 +16,7 @@ const periodSchema = new mongoose.Schema({
   },
   teacher: {
     type: String,
-    required: true
+    required: false
   }
 });
 

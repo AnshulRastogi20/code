@@ -1,11 +1,13 @@
 'use client'
 
+// import '../globals.css'
 import { Inter } from 'next/font/google'
-import { Navbar } from '@/components/navbar'
-import { Toaster } from 'react-hot-toast'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import AuthenticatedLayout from '@/components/layouts/AuthenticatedLayout'
+import Box from '@mui/material/Box'
+import CircularProgress from '@mui/material/CircularProgress'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,17 +26,20 @@ export default function RootLayout({
   }, [status, router, session])
 
   if (status === 'loading') {
-    return <div>Loading...</div>
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        minHeight: '100vh'
+      }}>
+        <CircularProgress />
+      </Box>
+    )
   }
 
-  return (
-    <div className={`${inter.className} bg-black text-white min-h-screen`}>
-      <Navbar />
-      <div className="container mx-auto">
-        <Toaster position="top-center" />
-        {children}
-      </div>
-    </div>
-  )
+  return <AuthenticatedLayout>
+    {children}
+    </AuthenticatedLayout>
 }
 

@@ -1,62 +1,62 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
-import {  useSession } from 'next-auth/react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {  ArrowLeftRight } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import axios from 'axios'
 import { toast } from 'react-hot-toast'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Calendar } from "@/components/ui/calendar"
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer"
-import { Input } from '@/components/ui/input'
-import { Label } from "@/components/ui/label"
-import Link from 'next/link'
-import { Badge } from "@/components/ui/badge"
-import { allClasses, SubjectInfo } from '@/types'
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog"
-import { Input as TimeInput } from "@nextui-org/react"
+  Box,
+  Stack,
+  Typography,
+  Button,
+  Checkbox,
+  TextField,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  Drawer,
+  IconButton,
+  FormControlLabel,
+  useTheme,
+  alpha,
+  Card,
+} from '@mui/material'
+import { DateCalendar } from '@mui/x-date-pickers'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+import { SwapHoriz, Add } from '@mui/icons-material'
+import AppTheme from '@/components/shared-theme/AppTheme'
+import Link from 'next/link'
+import { allClasses, DaySchedule, Period, SubjectInfo } from '@/types'
+import CssBaseline from '@mui/material/CssBaseline'
+import { TimePicker } from '@mui/x-date-pickers/TimePicker'
+import {
+  chartsCustomizations,
+  dataGridCustomizations,
+  datePickersCustomizations,
+  treeViewCustomizations,
+} from '@/components/shared-theme/customizations';
 
-// import { Period } from '@/types'
+const xThemeComponents = {
+  ...chartsCustomizations,
+  ...dataGridCustomizations,
+  ...datePickersCustomizations,
+  ...treeViewCustomizations,
+};
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
-interface DaySchedule {
-  day: string
-  periods: Period[]
-}
-
-interface Period {
-  // ...existing code...
-  isHoliday?: boolean;
-  happened?: boolean;
-  allAttended?: number;
-  allHappened?: number;
-  attended?: boolean;
-  subject: string;
-  teacher: string;
-  startTime: string;
-  endTime: string;
-  topicsCovered?: string;
-  disabled?: boolean;
-  temporarySubject?: string | null;
-  originalSubject?: string;
-  temporaryExchange?: {
-    originalSubject: string;
-    exchangeEndDate: Date;
-  } | null;
-}
+// ... keep existing interfaces and type definitions ...
 
 export default function SchedulePage() {
+  const theme = useTheme()
   const router = useRouter()
   const { data: session, status } = useSession()
   const [changedPeriods, setChangedPeriods] = useState<{[key: string]: boolean}>({});
@@ -87,13 +87,22 @@ export default function SchedulePage() {
     };
   }>({});
 
+  // Add new loading states
+  const [loadingStates, setLoadingStates] = useState<{
+    attendance: { [key: string]: boolean };
+    disable: { [key: string]: boolean };
+    topics: { [key: string]: boolean };
+  }>({
+    attendance: {},
+    disable: {},
+    topics: {},
+  });
+
   useEffect(() => {
-    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    const monthsOfYear = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    
-    setDayName(daysOfWeek[selectedDate.getDay()])
-    setMonthName(monthsOfYear[selectedDate.getMonth()])
-    setDateDisplay(selectedDate.getDate().toString())
+    const today = dayjs()
+    setDayName(today.format('dddd'))
+    setMonthName(today.format('MMMM'))
+    setDateDisplay(today.format('D'))
   }, [selectedDate])
 
   const fetchTodaySchedule = useCallback(async () => {
@@ -103,7 +112,7 @@ export default function SchedulePage() {
       setIsLoading(true)
       const [timetableRes, savedDataRes] = await Promise.all([
         axios.get('/api/user/timetable'),
-        axios.get(`/api/schedule?date=${selectedDate.toISOString()}`)
+        axios.get(`/api/schedule?date=${dayjs(selectedDate).toISOString()}`)
       ])
 
       const todaySchedule = timetableRes.data.schedule.find((day: DaySchedule) => 
@@ -163,11 +172,19 @@ export default function SchedulePage() {
     fetchTodaySchedule()
   }, [fetchTodaySchedule])
 
-
-
+  // Modified handleAttendanceChange with loading state
   const handleAttendanceChange = async (subject: string, attended: boolean, startTime: string) => {
     const key = `${subject}-${startTime}`;
-        
+    
+    // Prevent action if already loading
+    if (loadingStates.attendance[key]) return;
+
+    // Set loading state
+    setLoadingStates(prev => ({
+      ...prev,
+      attendance: { ...prev.attendance, [key]: true }
+    }));
+
     // Store original value if not already stored
     if (!originalValues[key]) {
         const period = timetable?.periods.find(p => 
@@ -184,6 +201,7 @@ export default function SchedulePage() {
         [key]: originalValues[key]?.attended !== attended
     }));
     try {
+      await new Promise(resolve => setTimeout(resolve, 500)); // Optional: minimum loading time
         const response = await axios.post('/api/attendance/update', {
             subjectName: subject,
             attended,
@@ -224,6 +242,11 @@ export default function SchedulePage() {
             });
             setTimetable({ ...timetable, periods: updatedPeriods });
         }
+    } finally {
+      setLoadingStates(prev => ({
+        ...prev,
+        attendance: { ...prev.attendance, [key]: false }
+      }));
     }
 }
 
@@ -240,8 +263,20 @@ const handleDisableClass = async (subject: string, shouldDisable: boolean, start
   await updateClassStatus(subject, shouldDisable, startTime);
 }
 
+// Modified handleDisableClass with loading state
 const updateClassStatus = async (subject: string, shouldDisable: boolean, startTime: string) => {
+  const key = `${subject}-${startTime}`;
+    
+  // Prevent action if already loading
+  if (loadingStates.disable[key]) return;
+
+  setLoadingStates(prev => ({
+    ...prev,
+    disable: { ...prev.disable, [key]: true }
+  }));
+
   try {
+    await new Promise(resolve => setTimeout(resolve, 500)); // Optional: minimum loading time
     const response = await axios.post('/api/disableClass', {
       subjectName: subject,
       date: selectedDate.toISOString(),
@@ -272,13 +307,26 @@ const updateClassStatus = async (subject: string, shouldDisable: boolean, startT
         ? error.response?.data?.error 
         : `Failed to ${shouldDisable ? 'disable' : 'enable'} class`
     );
+  } finally {
+    setLoadingStates(prev => ({
+      ...prev,
+      disable: { ...prev.disable, [key]: false }
+    }));
   }
 }
 
-// Modify handleTopicsUpdate function
+// Modified handleTopicsUpdate with loading state
 const handleTopicsUpdate = async (subject: string, topics: string, startTime: string) => {
   const key = `${subject}-${startTime}`;
-        
+    
+  // Prevent action if already loading
+  if (loadingStates.topics[key]) return;
+
+  setLoadingStates(prev => ({
+    ...prev,
+    topics: { ...prev.topics, [key]: true }
+  }));
+
   // Store original value if not already stored
   if (!originalValues[key]) {
       const period = timetable?.periods.find(p => 
@@ -310,6 +358,7 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
   }
 
   try {
+    await new Promise(resolve => setTimeout(resolve, 500)); // Optional: minimum loading time
     await axios.post('/api/attendance/topics', {
       subjectName: subject,
       topics,
@@ -321,6 +370,11 @@ const handleTopicsUpdate = async (subject: string, topics: string, startTime: st
     console.error('Failed:', error)
 
     toast.error('Failed to update topics')
+  } finally {
+    setLoadingStates(prev => ({
+      ...prev,
+      topics: { ...prev.topics, [key]: false }
+    }));
   }
 }
 
@@ -354,8 +408,6 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
   }
 }
 
-
-
 // Add time conversion helper
 const convertTo24Hour = (time: string, period: string) => {
   if (!time) return ''
@@ -388,13 +440,10 @@ const convertTo12Hour = (time: string) => {
 
 const handleAddClass = async () => {
   try {
-      // Format date properly for UTC storage
-      const formattedDate = validTill ? new Date(Date.UTC(
-          validTill.getFullYear(),
-          validTill.getMonth(),
-          validTill.getDate(),
-          0, 0, 0, 0
-      )).toISOString() : null;
+      // Format date properly for UTC storage to maintain compatibility
+      const formattedDate = validTill ? 
+        dayjs(validTill).startOf('day').utc().toISOString() : 
+        null;
 
       const formattedClass = {
           subject: newClass.subject,
@@ -417,258 +466,312 @@ const handleAddClass = async () => {
   }
 }
 
-
   if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-indigo-600 text-xl">Loading...</div>
-      </div>
+      <AppTheme>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh' 
+        }}>
+          <CircularProgress />
+        </Box>
+      </AppTheme>
     );
   }
 
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-          <div className="flex flex-col">
-            <span className="text-gray-500 text-sm font-medium">{dayName}</span>
-            <h1 className="text-gray-900 text-2xl font-bold">
-              {dateDisplay} {monthName}
-            </h1>
-          </div>
-          <div className="flex gap-4 mb-4 " >
-            <Button 
+    <AppTheme themeComponents={xThemeComponents}>
+      <CssBaseline enableColorScheme />
+      <Box sx={{ 
+        minHeight: '100vh', 
+        bgcolor: (theme) => alpha(theme.palette.background.default, 1)  // Changed from 0.98 to 1
+      }}>
+        <Box sx={{ maxWidth: 'xl', mx: 'auto', p: 3 }}>
+          {/* Header Section */}
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            justifyContent="space-between" 
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            spacing={2}
+            mb={3}
+          >
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                {dayName}
+              </Typography>
+              <Typography variant="h4" fontWeight="bold">
+                {dateDisplay} {monthName}
+              </Typography>
+            </Box>
+
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
                 onClick={() => setShowAddClass(true)}
-                variant="outline" 
-
-                className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm"
-            >
-                Add a Class
-            </Button>
-            <Link href="/exchange">
-              <Button 
-                variant="outline" 
-                className="bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 shadow-sm"
               >
-                <ArrowLeftRight className="h-4 w-4 mr-2" />
-                Exchange Periods
+                Add a Class
               </Button>
-            </Link>
-          </div>
-        </div>
+              <Link href="/exchange" >
+                <Button
+                  variant="contained"
+                  startIcon={<SwapHoriz />}
+                  
+                >
+                  Exchange Periods
+                </Button>
+              </Link>
+            </Stack>
+          </Stack>
 
-        <div className="space-y-3">
-          {timetable?.periods.map((period, index) => (
-            <Card 
-              key={`${period.subject}-${period.startTime}-${index}`}
-              className="border border-gray-700 rounded-xl bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all"
-            >
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-medium text-gray-900">{period.subject}</h3>
+          {/* Schedule Cards */}
+          <Stack spacing={2}>
+            {timetable?.periods.map((period, index) => (
+              <Card
+                key={`${period.subject}-${period.startTime}-${index}`}
+                variant="outlined"
+                sx={(theme) => ({
+                  bgcolor: alpha(theme.palette.background.default, 1), // Changed from background.paper
+                  borderRadius: 2,
+                  p: 3,
+                  transition: 'box-shadow 0.3s',
+                  '&:hover': { boxShadow: 6 }
+                })}
+              >
+                <Stack spacing={2}>
+                  <Stack 
+                    direction={{ xs: 'column', sm: 'row' }} 
+                    justifyContent="space-between" 
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    spacing={2}
+                  >
+                    {/* Period Info */}
+                    <Box>
+                      <Typography variant="h6" gutterBottom>
+                        {period.subject}
                         {period.temporaryExchange && (
-                          <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
+                          <Typography
+                            component="span"
+                            variant="caption"
+                            sx={{ ml: 1, p: 0.5, bgcolor: 'primary.light', borderRadius: 1 }}
+                          >
                             Original: {period.temporaryExchange.originalSubject}
-                          </Badge>
+                          </Typography>
                         )}
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-500">
-                        <span>{period.startTime} - {period.endTime}</span>
-                        <span>•</span>
-                        <span>{period.teacher}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <Checkbox 
-                          id={`attendance-${period.subject}-${period.startTime}`}
-                          checked={period.attended}
-                          onCheckedChange={(checked) => 
-                            handleAttendanceChange(period.subject, checked as boolean, period.startTime)
-                          }
-                          disabled={period.isHoliday || period.disabled}
-                          className="border-gray-300 data-[state=checked]:bg-indigo-600"
-                        />
-                        <label 
-                          htmlFor={`attendance-${period.subject}-${period.startTime}`}
-                          className="text-gray-700 text-sm"
-                        >
-                          Present
-                        </label>
-                      </div>
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {period.startTime} - {period.endTime} • {period.teacher}
+                      </Typography>
+                    </Box>
+
+                    {/* Actions */}
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <FormControlLabel
+                        control={
+                          <Box sx={{ position: 'relative' }}>
+                            <Checkbox
+                              checked={period.attended}
+                              onChange={(e) => handleAttendanceChange(period.subject, e.target.checked, period.startTime)}
+                              disabled={period.isHoliday || period.disabled || loadingStates.attendance[`${period.subject}-${period.startTime}`]}
+                            />
+                            {loadingStates.attendance[`${period.subject}-${period.startTime}`] && (
+                              <CircularProgress
+                                size={24}
+                                sx={{
+                                  position: 'absolute',
+                                  top: '50%',
+                                  left: '50%',
+                                  marginTop: '-12px',
+                                  marginLeft: '-12px',
+                                }}
+                              />
+                            )}
+                          </Box>
+                        }
+                        label="Present"
+                      />
                       
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        disabled={period.attended}
-                        onClick={() => handleDisableClass(period.subject, !period.disabled, period.startTime)}
-                        className={`h-8 px-3 shadow-sm ${
-                          period.disabled 
-                            ? 'border-green-200 text-green-600 hover:bg-green-50' 
-                            : 'border-red-200 text-red-600 hover:bg-red-50'
-                        }`}
-                      >
-                        {period.disabled ? 'Enable' : 'Disable'}
-                      </Button>
-                    </div>
-                  </div>
+                      <Box sx={{ position: 'relative' }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          disabled={period.attended || loadingStates.disable[`${period.subject}-${period.startTime}`]}
+                          onClick={() => handleDisableClass(period.subject, !period.disabled, period.startTime)}
+                          color={period.disabled ? "success" : "error"}
+                        >
+                          {period.disabled ? 'Enable' : 'Disable'}
+                        </Button>
+                        {loadingStates.disable[`${period.subject}-${period.startTime}`] && (
+                          <CircularProgress
+                            size={24}
+                            sx={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '50%',
+                              marginTop: '-12px',
+                              marginLeft: '-12px',
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </Stack>
+                  </Stack>
 
-                  <Input
-                    placeholder="Topics covered..."
-                    value={period.topicsCovered || ''}
-                    onChange={(e) => handleTopicsUpdate(period.subject, e.target.value, period.startTime)}
-                    disabled={period.disabled || (!period.attended && !period.topicsCovered)}
-                    className="bg-white/5 border-gray-700 text-gray-700 text-sm h-9 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
-                  />
+                  {/* Topics Input */}
+                  <Box sx={{ position: 'relative' }}>
+                    <TextField
+                      fullWidth
+                      placeholder="Topics covered..."
+                      value={period.topicsCovered || ''}
+                      onChange={(e) => handleTopicsUpdate(period.subject, e.target.value, period.startTime)}
+                      disabled={period.disabled || (!period.attended && !period.topicsCovered) || 
+                        loadingStates.topics[`${period.subject}-${period.startTime}`]}
+                      size="small"
+                    />
+                    {loadingStates.topics[`${period.subject}-${period.startTime}`] && (
+                      <CircularProgress
+                        size={20}
+                        sx={{
+                          position: 'absolute',
+                          right: 8,
+                          top: '50%',
+                          marginTop: '-10px',
+                        }}
+                      />
+                    )}
+                  </Box>
 
+                  {/* Save Changes Button */}
                   {changedPeriods[`${period.subject}-${period.startTime}`] && (
-                    <Button 
+                    <Button
+                      variant="contained"
                       onClick={() => handleSaveChanges(period.subject, period.startTime)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto shadow-sm"
+                      fullWidth
                     >
                       Save Changes
                     </Button>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+                </Stack>
+              </Card>
+            ))}
+          </Stack>
+        </Box>
 
-      <AlertDialog open={showHolidayConfirmation} onOpenChange={setShowHolidayConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Enable Holiday Class?</AlertDialogTitle>
-            <AlertDialogDescription>
+        {/* Holiday Confirmation Dialog */}
+        <Dialog
+          open={showHolidayConfirmation}
+          onClose={() => setShowHolidayConfirmation(false)}
+        >
+          <DialogTitle>Enable Holiday Class?</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
               This class is marked as a holiday. Enabling it might affect attendance records. Are you sure you want to proceed?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
               setShowHolidayConfirmation(false);
               setPendingEnableAction(null);
-            }}
-            className='text-black'
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              if (pendingEnableAction) {
-                updateClassStatus(pendingEnableAction.subject, false, pendingEnableAction.startTime);
-                setShowHolidayConfirmation(false);
-                setPendingEnableAction(null);
-              }
             }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (pendingEnableAction) {
+                  updateClassStatus(pendingEnableAction.subject, false, pendingEnableAction.startTime);
+                  setShowHolidayConfirmation(false);
+                  setPendingEnableAction(null);
+                }
+              }}
+              autoFocus
+            >
               Enable Anyway
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Add Class Drawer */}
-      <Drawer open={showAddClass} onOpenChange={setShowAddClass}>
-        <DrawerContent className="bg-gray-900 border-t border-gray-700">
-            <DrawerHeader>
-                <DrawerTitle>Add New Class</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4 space-y-4">
-                <div className="space-y-2 ">
-                    <Label htmlFor="subject">Subject</Label>
-                    <Input
-                        id="subject"
-                        value={newClass.subject}
-                        onChange={(e) => setNewClass(prev => ({
-                            ...prev,
-                            subject: e.target.value
-                        }))}
-                    />
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-white">
-                    <div className="space-y-2">
-                        <Label htmlFor="startTime">Start Time</Label>
-                        <div className="flex gap-2 text-white">
-                            <TimeInput
-                                id="startTime"
-                                type="time"
-                                value={newClass.startTime}
-                                variant="bordered"
-                                radius="sm"
-                                onChange={(e) => setNewClass(prev => ({
-                                    ...prev,
-                                    startTime: e.target.value
-                                }))}
-                                className="max-w-[200px] flex-1"
-                                classNames={{
-                                    input: "bg-white/5 text-white",
-                                    innerWrapper: "bg-transparent",
-                                    inputWrapper: "bg-transparent border-gray-700 hover:border-gray-600"
-                                }}
-                            />
-                            
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="endTime">End Time</Label>
-                        <div className="flex gap-2">
-                            <TimeInput
-                                id="endTime"
-                                type="time"
-                                value={newClass.endTime}
-                                variant="bordered"
-                                radius="sm"
-                                onChange={(e) => setNewClass(prev => ({
-                                    ...prev,
-                                    endTime: e.target.value
-                                }))}
-                                className="max-w-[200px] flex-1 text-white"
-                                classNames={{
-                                    input: "bg-white/5 text-white",
-                                    innerWrapper: "bg-transparent",
-                                    inputWrapper: "bg-transparent border-gray-700 hover:border-gray-600"
-                                }}
-                            />
-                            
-                        </div>
-                    </div>
-                </div>
-                <div className="space-y-2 ">
-                    <Label>Valid Till</Label>
-                    <Calendar
-                        mode="single"
-                        selected={validTill}
-                        onSelect={setValidTill}
-                        disabled={(date) => date < new Date()}
-                        className="rounded-md border content-center"
-                    />
-                </div>
-                <div className="flex justify-end gap-4">
-                    <DrawerClose asChild>
-                        <Button 
-                        variant="outline"
-                        className='text-black'
-                        >
-                          Cancel
-                        </Button>
-                    </DrawerClose>
-                    <Button 
-                        variant="outline"
-                        onClick={handleAddClass}
-                        className='text-black'
-                        disabled={!newClass.subject || !newClass.startTime || !newClass.endTime || !validTill}
-                    >
-                        Add Class
-                    </Button>
-                </div>
-            </div>
-        </DrawerContent>
-      </Drawer>
-    </div>
+        {/* Add Class Drawer */}
+        <Drawer
+          anchor="right"
+          open={showAddClass}
+          onClose={() => setShowAddClass(false)}
+          PaperProps={{
+            sx: {
+              backgroundColor: theme => alpha(theme.palette.background.default, 1), // Added this line
+              width: 400
+            }
+          }}
+        >
+          <Box sx={{ width: 400, p: 3 }}>
+            <Typography variant="h6" gutterBottom>Add New Class</Typography>
+            <Stack spacing={3}>
+              <TextField
+                label="Subject"
+                value={newClass.subject}
+                onChange={(e) => setNewClass(prev => ({
+                  ...prev,
+                  subject: e.target.value
+                }))}
+                fullWidth
+              />
+              
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <Stack spacing={2}>
+                  <TimePicker
+                    label="Start Time"
+                    value={dayjs(`2000/01/01 ${newClass.startTime}`)}
+                    onChange={(newValue) => {
+                      if (newValue) {
+                        setNewClass(prev => ({
+                          ...prev,
+                          startTime: newValue.format('HH:mm')
+                        }))
+                      }
+                    }}
+                  />
+                  <TimePicker
+                    label="End Time"
+                    value={dayjs(`2000/01/01 ${newClass.endTime}`)}
+                    onChange={(newValue) => {
+                      if (newValue) {
+                        setNewClass(prev => ({
+                          ...prev,
+                          endTime: newValue.format('HH:mm')
+                        }))
+                      }
+                    }}
+                  />
+                  <Typography variant="subtitle1" gutterBottom>Valid Till</Typography>
+                  <DateCalendar
+                    value={validTill ? dayjs(validTill) : null}
+                    onChange={(newValue) => setValidTill(newValue ? newValue.toDate() : undefined)}
+                    disablePast
+                  />
+                </Stack>
+              </LocalizationProvider>
+
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button onClick={() => setShowAddClass(false)}>
+                  Cancel
+                </Button>
+                {(newClass.subject &&newClass.startTime &&newClass.endTime || validTill) && (
+                  <Button
+                  variant="contained"
+                  onClick={handleAddClass}
+                >
+                  Add Class
+                </Button>
+                )}
+                
+              </Stack>
+            </Stack>
+          </Box>
+        </Drawer>
+      </Box>
+    </AppTheme>
   );
 }

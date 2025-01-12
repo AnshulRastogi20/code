@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css'
 import QueryProvider from './QueryProvider'
 import { Toaster } from 'react-hot-toast'
 import Providers from '@/components/providers/session-provider'
 import { NextUIClientProvider } from '@/components/providers/nextui-provider'
-import { Navbar } from '@/components/navbar'
+import Navbar from '@/components/ui/material/Navbar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,10 +23,11 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-black text-white min-h-screen`}>
           <QueryProvider>
             <Providers>
-        <Navbar />
-        <main className="container mx-auto p-4 mt-16"> {/* Added mt-20 for spacing below navbar */}
+
+        <main > 
               <NextUIClientProvider>
                 <Toaster position="top-center" />
+                
                 {children}
               </NextUIClientProvider>
         </main>

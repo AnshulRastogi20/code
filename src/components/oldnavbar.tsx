@@ -20,6 +20,16 @@ export function Navbar() {
       <div className="w-full backdrop-blur-sm bg-black/60 border-b border-zinc-800 shadow-lg">
         <div className="container min-w-full py-4 px-4 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
           <div className="flex gap-6 sm:gap-8 flex-wrap justify-center">
+          <Link 
+              href="/"
+              className={`text-sm font-medium transition-colors hover:scale-105 ${
+                pathname === '/' 
+                  ? 'text-white' 
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Home
+            </Link>
             <Link 
               href="/schedule"
               className={`text-sm font-medium transition-colors hover:scale-105 ${
