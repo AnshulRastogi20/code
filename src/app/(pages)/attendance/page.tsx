@@ -6,7 +6,8 @@ import { toast } from 'react-hot-toast'
 import {
   CircularProgress,
   Box,
-  useTheme
+  useTheme,
+  Card
 } from '@mui/material'
 import AppTheme from '@/components/shared-theme/AppTheme'
 import * as React from 'react';
@@ -89,12 +90,19 @@ export default function AttendancePage() {
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>
         {/* Main content */}
-        <Box
+        <Card
+          variant='outlined'
           component="main"
           sx={(theme) => ({
+            border: 0,
             flexGrow: 1,
             backgroundColor: alpha(theme.palette.background.default, 1),
             overflow: 'auto',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: theme.shadows[4],
+                    },
           })}
         >
           <Stack
@@ -109,7 +117,7 @@ export default function AttendancePage() {
             {/* <Header /> */}
             <MainGrid />
           </Stack>
-        </Box>
+        </Card>
       </Box>
     </AppTheme>
   );

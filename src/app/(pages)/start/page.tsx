@@ -14,6 +14,7 @@ import {
   Grid,
   useTheme,
   CssBaseline,
+  Card,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { PlayArrow, Cancel, AccessTime, Event } from '@mui/icons-material'
@@ -33,7 +34,7 @@ const themeComponents = {
 
 export default function StartPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   const [todayClasses, setTodayClasses] = useState<Period[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -69,8 +70,8 @@ export default function StartPage() {
   const handleStartDay = async () => {
     try {
       await axios.post('/api/start', { action: 'startDay' })
-      toast.success('Day started successfully')
-      router.push('/schedule')
+        toast.success('Day started successfully')
+        router.push('/schedule')
     } catch (error) {
       console.error('Failed:', error)
       toast.error('Failed to start day')
@@ -131,7 +132,8 @@ export default function StartPage() {
           <Grid container spacing={3}>
             {todayClasses.map((period, index) => (
               <Grid item xs={12} key={index}>
-                <Box
+                <Card
+                variant='outlined'
                   sx={(theme) => ({
                     p: 3,
                     borderRadius: 2,
@@ -169,7 +171,7 @@ export default function StartPage() {
                       </Box>
                     )}
                   </Box>
-                </Box>
+                </Card>
               </Grid>
             ))}
           </Grid>

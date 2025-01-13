@@ -7,6 +7,7 @@ import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import Link from 'next/link';
 
 export default function HighlightedCard() {
   const theme = useTheme();
@@ -22,11 +23,12 @@ export default function HighlightedCard() {
           gutterBottom
           sx={{ fontWeight: '600' }}
         >
-          Explore your data
+          Help us improve!
         </Typography>
         <Typography sx={{ color: 'text.secondary', mb: '8px' }}>
-          Uncover performance and visitor insights with our data wizardry.
+          Write to us about mistakes , likings and what more you want !
         </Typography>
+        <Link href={'/feedback'}>
         <Button
           variant="contained"
           size="small"
@@ -34,8 +36,9 @@ export default function HighlightedCard() {
           endIcon={<ChevronRightRoundedIcon />}
           fullWidth={isSmallScreen}
         >
-          Get insights
+          Feedback Form
         </Button>
+        </Link>
       </CardContent>
     </Card>
   );
