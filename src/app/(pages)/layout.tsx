@@ -9,7 +9,6 @@ import AuthenticatedLayout from '@/components/layouts/AuthenticatedLayout'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 
-const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({
   children,

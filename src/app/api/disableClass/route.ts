@@ -4,7 +4,7 @@ import { ClassInfo } from '@/models/ClassInfo'
 import { User } from '@/models/User'
 import { connectDB } from '@/lib/db'
 import { authOptions } from '../auth/[...nextauth]/options'
-import { allClasses, ClassEntry, SubjectInfo } from '@/types'
+import {ClassEntry, SubjectInfo } from '@/types'
 
 export async function POST(req: Request) {
     try {

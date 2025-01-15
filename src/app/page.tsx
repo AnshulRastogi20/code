@@ -35,13 +35,13 @@ export default function Home() {
         {/* <LogoCollection /> */}
         <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
         
-        <Features />
+        {/* <Features />
         <Divider />
         <Pricing />
         <Divider />
         <FAQ />
         <Divider />
-        <Footer />
+        <Footer /> */}
       </div>
     </AppTheme>
   );

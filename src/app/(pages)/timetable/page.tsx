@@ -8,7 +8,6 @@ import { useTimetable } from '@/hooks/useAppData'
 import { useRouter } from "next/navigation"
 import AppTheme from '@/components/shared-theme/AppTheme'
 import {
-  Box,
   Button,
   Card,
   CardContent,
@@ -23,11 +22,9 @@ import {
   MenuItem,
   Select,
   Typography,
-  useTheme,
   FormControl,
   InputLabel,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { PresetCreationDrawer } from "@/components/PresetCreationDrawer"
 import {
     chartsCustomizations,
@@ -48,7 +45,6 @@ export default function TimetablePage() {
   const [pendingPresetId, setPendingPresetId] = useState<string | null>(null);
   const router = useRouter()
   const { applyPreset } = useTimetable()
-  const theme = useTheme()
   const { data: session } = useSession()
 
 
@@ -259,7 +255,7 @@ export default function TimetablePage() {
           </DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Changing timetable will delete today's attendance records. Are you sure you want to proceed?
+              Changing timetable will delete today`s attendance records. Are you sure you want to proceed?
             </DialogContentText>
           </DialogContent>
           <DialogActions>

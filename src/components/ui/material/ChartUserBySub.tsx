@@ -38,7 +38,7 @@ const { status } = useSession();
 
 
 const getChartData = (subjects: SubjectAttendance[]) => {
-  return subjects.map((subject,index) => {
+  return subjects.map((subject) => {
     return {
       label: subject.name,
       value: subject.attended,
@@ -68,9 +68,7 @@ const subs = getChartSubjects(subjects);
 console.log("SUBS - ", subs)
 const colors = subs.map(sub => sub.color);
 
-interface StyledTextProps {
-  variant: 'primary' | 'secondary';
-}
+
 
 // const StyledText = styled('text', {
 //   shouldForwardProp: (prop) => prop !== 'variant',

@@ -12,13 +12,12 @@ import {
   Typography,
   CircularProgress,
   Grid,
-  useTheme,
   CssBaseline,
   Card,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { PlayArrow, Cancel, AccessTime, Event } from '@mui/icons-material'
-import { Period, DaySchedule } from '@/types'
+import { Period, DaySchedule, allClasses } from '@/types'
 import AppTheme from '@/components/shared-theme/AppTheme'
 import {
   chartsCustomizations,
@@ -71,10 +70,10 @@ export default function StartPage() {
       const todayDate = new Date()
       todayDate.setHours(0, 0, 0, 0)
       const todayClasses = classInfoRes.data.calendarData.filter(
-        (cls: any) => new Date(cls.date).toDateString() === todayDate.toDateString()
+        (cls:allClasses) => new Date(cls.date).toDateString() === todayDate.toDateString()
       )
       
-      setIsHoliday(todayClasses.length > 0 && todayClasses.every((cls: any) => cls.isHoliday))
+      setIsHoliday(todayClasses.length > 0 && todayClasses.every((cls: allClasses) => cls.isHoliday))
       setTodayClasses(todaySchedule?.periods || [])
     } catch (error) {
       console.error('Failed:', error)
@@ -105,7 +104,7 @@ export default function StartPage() {
     if (currentDayName) {
       fetchTodayClasses()
     }
-  }, []) // Empty dependency array since we capture dayName value
+  }) // Empty dependency array since we capture dayName value
 
   const handleStartDay = async () => {
     try {

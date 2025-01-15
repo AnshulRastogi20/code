@@ -8,7 +8,6 @@ import * as React from "react";
 import {
   Box,
   Container,
-  Paper,
   Typography,
   Select,
   MenuItem,
@@ -16,7 +15,6 @@ import {
   InputLabel,
   Button,
   CircularProgress,
-  Divider,
   Stack,
   IconButton,
 } from "@mui/material";
@@ -27,7 +25,7 @@ import dayjs from "dayjs";
 import ClearIcon from "@mui/icons-material/Clear";
 import AppTheme from "@/components/shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
-import { alpha, useTheme } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
 import {
   chartsCustomizations,
   dataGridCustomizations,

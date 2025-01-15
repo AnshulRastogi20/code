@@ -4,7 +4,6 @@ import QueryProvider from './QueryProvider'
 import { Toaster } from 'react-hot-toast'
 import Providers from '@/components/providers/session-provider'
 import { NextUIClientProvider } from '@/components/providers/nextui-provider'
-import Navbar from '@/components/ui/material/Navbar'
 
 const inter = Inter({ subsets: ['latin'] })
 

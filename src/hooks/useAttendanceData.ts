@@ -31,8 +31,10 @@ export const useAttendanceData = () => {
       };
       const { data } = await axios.get('/api/attendance/get', { params });
       setSubjects(data);
-    } catch (error) {
-      toast.error('Failed to load attendance data');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to load attendance data: ${errorMessage}`);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -75,8 +77,9 @@ export const useAttendanceData = () => {
       });
 
       return weeklyPercentages;
-    } catch (error) {
-      console.error('Error calculating weekly attendance:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Error calculating weekly attendance:', errorMessage);
       return [];
     }
   };

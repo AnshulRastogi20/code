@@ -16,6 +16,7 @@ function renderStatus(status: 'Enough' | 'Low') {
 }
 
 export function renderAvatar(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params: GridCellParams<{ name: string; color: string }, any, any>,
 ) {
   if (params.value == null) {
@@ -47,6 +48,8 @@ export const columns: GridColDef[] = [
     headerName: 'Status',
     flex: 0.5,
     minWidth: 80,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     renderCell: (params) => renderStatus(params.value as any),
   },
   {

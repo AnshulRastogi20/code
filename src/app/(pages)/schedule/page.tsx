@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, use } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
@@ -19,9 +19,7 @@ import {
   DialogActions,
   DialogContentText,
   Drawer,
-  IconButton,
   FormControlLabel,
-  useTheme,
   alpha,
   Card,
 } from '@mui/material'
@@ -56,7 +54,6 @@ dayjs.extend(timezone)
 // ... keep existing interfaces and type definitions ...
 
 export default function SchedulePage() {
-  const theme = useTheme()
   const router = useRouter()
   const { data: session, status } = useSession()
   const [changedPeriods, setChangedPeriods] = useState<{[key: string]: boolean}>({});
@@ -412,20 +409,7 @@ const handleSaveChanges = async (subject: string, startTime: string) => {
   }
 }
 
-// Add time conversion helper
-const convertTo24Hour = (time: string, period: string) => {
-  if (!time) return ''
-  const [hours, minutes] = time.split(':')
-  let hour = parseInt(hours)
-  
-  if (period === 'PM' && hour < 12) {
-      hour += 12
-  } else if (period === 'AM' && hour === 12) {
-      hour = 0
-  }
-  
-  return `${hour.toString().padStart(2, '0')}:${minutes}`
-}
+
 
 const convertTo12Hour = (time: string) => {
   if (!time) return ''

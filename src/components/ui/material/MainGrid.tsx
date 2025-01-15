@@ -5,9 +5,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Copyright from '@/components/ui/material/Copyright';
 import AttendanceGrid from './AttendanceGrid';
-import HighlightedCard from './HighlightedCard';
-import PageViewsBarChart from './PageViewsBarChart';
-import SessionsChart from './SessionsChart';
+
 import StatCard, { StatCardProps } from './StatCard';
 import ChartUserBySub from './ChartUserBySub';
 import { useAttendanceData } from '@/hooks/useAttendanceData';
@@ -15,7 +13,6 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import AppTheme from '@/components/shared-theme/AppTheme';
 import CircularProgress from '@mui/material/CircularProgress';
-import { SubjectAttendance } from '@/types';
 
 export default function MainGrid() {
 
@@ -23,15 +20,8 @@ export default function MainGrid() {
   const {
     subjects,
     loading,
-    fromDate,
-    tillDate,
-    setFromDate,
-    setTillDate,
-    handleDateFilter,
-    resetFilter,
     fetchAttendance,
     targetPercentage, 
-    setTargetPercentage,
   } = useAttendanceData();
 
   
@@ -45,7 +35,6 @@ export default function MainGrid() {
   const totalAttended = subjects.reduce((acc, curr) => acc + curr.attended, 0);
   const overallPercentage = (totalAttended / totalClasses) * 100;
   const margin = targetPercentage < overallPercentage ? (overallPercentage-targetPercentage) : (overallPercentage-targetPercentage);
-  const trendValues = { up: margin.toString(), down:margin.toString(), neutral: margin.toString()}
   const trend = targetPercentage < overallPercentage ? 'up' : (targetPercentage > overallPercentage ?'down' : 'neutral');
   if (loading) return (
       <AppTheme>
@@ -108,7 +97,7 @@ const data: StatCardProps[] = [
           </Grid>
         ))}
        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <HighlightedCard />
+          {/* <HighlightedCard /> */}
         </Grid> 
         
           {/* <Grid size={{ xs: 12, md: 6 }}>

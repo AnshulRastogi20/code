@@ -2,7 +2,11 @@ import * as React from 'react';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 
-export default function Copyright(props: any) {
+interface CopyrightProps extends React.ComponentProps<typeof Typography> {
+  sx?: typeof Typography.prototype.props.sx;
+}
+
+export default function Copyright(props: CopyrightProps) {
   return (
     <Typography
       variant="body2"

@@ -6,7 +6,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar'
 import dayjs from 'dayjs'
 import { Box, Container, Typography, Button, Dialog, DialogTitle, DialogContent, 
-         DialogActions, IconButton, Switch, Chip, Stack, 
+         DialogActions, Switch, Chip, Stack, 
          DialogContentText, useTheme, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Grid, 
          Card} from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -22,7 +22,7 @@ import {
 } from '@/components/shared-theme/customizations';
 import { toast } from 'react-hot-toast'
 import CircularProgress from '@mui/material/CircularProgress'
-import PageViewsBarChart from '@/components/ui/material/PageViewsBarChart'
+// import PageViewsBarChart from '@/components/ui/material/PageViewsBarChart'
 import { useRouter } from 'next/navigation'
 
 const xThemeComponents = {
@@ -59,7 +59,7 @@ export default function CalendarPage() {
 
     useEffect(() => {
         fetchCalendarData();
-    }, []); // Empty dependency array since fetchCalendarData is defined inside component
+    }); // Empty dependency array since fetchCalendarData is defined inside component
 
     const fetchCalendarData = useCallback(async () => {
         try {
@@ -286,7 +286,7 @@ export default function CalendarPage() {
                                             value={selectedDate ? dayjs(selectedDate) : null}
                                             onChange={handleDateChange}
                                             slots={{
-                                                day: (props: any) => {
+                                                day: (props) => {
                                                     const customStyles = getDateStyles(dayjs(props.day));
                                                     return (
                                                         <Box
@@ -382,7 +382,7 @@ export default function CalendarPage() {
 
                                 }}
                             >
-                                <PageViewsBarChart />
+                                {/* <PageViewsBarChart /> */}
                         </Card>
                         </Grid>
                     </Grid>

@@ -18,9 +18,7 @@ import type {} from '@mui/x-tree-view/themeAugmentation';
 import { alpha } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Stack from '@mui/material/Stack';
-import Header from "@/components/ui/material/Header";
 import MainGrid from '@/components/ui/material/MainGrid';
-import SideMenu from '@/components/ui/material/SideMenu';
 import {
   chartsCustomizations,
   dataGridCustomizations,
@@ -45,7 +43,6 @@ interface SubjectAttendance {
 }
 
 export default function AttendancePage() {
-  const theme = useTheme();
   const { status } = useSession();
   const [subjects, setSubjects] = useState<SubjectAttendance[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +65,7 @@ export default function AttendancePage() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, tillDate, showAll]);
+  }, [fromDate, tillDate, showAll, subjects,setFromDate,setTillDate,setShowAll]);
 
   useEffect(() => {
     if (status === 'authenticated') {

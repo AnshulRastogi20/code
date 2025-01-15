@@ -6,7 +6,7 @@ import { Timetable } from '@/models/Timetable'
 import { ClassInfo } from '@/models/ClassInfo'
 import { connectDB } from '@/lib/db'
 import { authOptions } from '../auth/[...nextauth]/options'
-import type { DaySchedule, SubjectInfo, Period } from '@/types'
+import type { DaySchedule, SubjectInfo, Period, allClasses } from '@/types'
 
 /**
  * POST endpoint to handle starting a new day or marking a holiday
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     
     // Check for existing entries for today
     const hasExistingEntries = classInfo?.subject.some((subj: SubjectInfo) =>
-      subj.allclasses.some((cls: any) =>
+      subj.allclasses.some((cls: allClasses) =>
         new Date(cls.date).toDateString() === today.toDateString()
       )
     )

@@ -111,11 +111,11 @@ export default function Navbar() {
                   Timetable
                 </Button>
               </Link>
-              <Link href="/feedback">
+              {/* <Link href="/feedback">
                 <Button variant="text" color="info" size="small">
                   Feedback
                 </Button>
-              </Link>              
+              </Link>               */}
             </Box>
           </Box>
           <Box
