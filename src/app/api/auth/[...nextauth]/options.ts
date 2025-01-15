@@ -4,6 +4,19 @@ import GoogleProvider from 'next-auth/providers/google';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 
+// Helper function to check if isDateStarted should be reset
+function shouldResetDateStarted(lastReset: string | undefined): boolean {
+  if (!lastReset) return true;
+  
+  const now = new Date();
+  const lastResetDate = new Date(lastReset);
+  
+  // Check if it's a new day (past midnight)
+  return now.getDate() !== lastResetDate.getDate() ||
+         now.getMonth() !== lastResetDate.getMonth() ||
+         now.getFullYear() !== lastResetDate.getFullYear();
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -40,19 +53,32 @@ export const authOptions: NextAuthOptions = {
       
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token._id = user._id?.toString();
         token.email = user.email;
         token.name = user.name;
+        token.isDateStarted = false;
+        token.lastReset = new Date().toISOString();
+      } else if (shouldResetDateStarted(token.lastReset)) {
+        token.isDateStarted = false;
+        token.lastReset = new Date().toISOString();
       }
+
+      // Allow updating isDateStarted through session update
+      if (trigger === 'update' && session?.user?.isDateStarted !== undefined) {
+        token.isDateStarted = session.user.isDateStarted;
+      }
+
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token, trigger }) {
       if (token) {  
         session.user._id = token._id; 
         session.user.email = token.email;
         session.user.name = token.name;
+        session.user.isDateStarted = token.isDateStarted;
+        session.user.lastReset = token.lastReset;
       }
       return session;
     },

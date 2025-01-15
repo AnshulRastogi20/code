@@ -23,6 +23,7 @@ import {
 import { toast } from 'react-hot-toast'
 import CircularProgress from '@mui/material/CircularProgress'
 import PageViewsBarChart from '@/components/ui/material/PageViewsBarChart'
+import { useRouter } from 'next/navigation'
 
 const xThemeComponents = {
   ...chartsCustomizations,
@@ -32,6 +33,7 @@ const xThemeComponents = {
 };
 
 export default function CalendarPage() {
+    const router = useRouter();
     const [selectedDate, setSelectedDate] = useState<Date>()
     const [calendarData, setCalendarData] = useState<CalendarData[]>([])
     const [selectedClass, setSelectedClass] = useState<CalendarData | null>(null)
@@ -198,15 +200,29 @@ export default function CalendarPage() {
         if (!selectedDate) return;
         
         try {
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const selectedDateCopy = new Date(selectedDate)
+            selectedDateCopy.setHours(0, 0, 0, 0)
+
+            // If selected date is today, redirect to start page
+            if (selectedDateCopy.getTime() === today.getTime()) {
+                router.push('/start')
+                return
+            }
+
+            // Otherwise proceed with adding schedule for past dates
             const response = await axios.post('/api/calendar/add-schedule', { 
                 date: selectedDate 
             });
             
             if (response.status === 200) {
                 await fetchCalendarData()
+                toast.success('Schedule added successfully')
             }
         } catch (error) {
             console.error('Failed to add schedule:', error)
+            toast.error('Failed to add schedule')
         }
     }
 

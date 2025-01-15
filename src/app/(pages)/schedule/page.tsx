@@ -163,10 +163,14 @@ export default function SchedulePage() {
   }, [dayName, selectedDate])
 
   useEffect(() => {
+    if (status === 'loading') return;
+    
     if (status === 'unauthenticated') {
-      router.push('/auth/sign-in')
+      router.push('/auth/sign-in');
+    } else if (!session?.user?.isDateStarted) {
+      router.push('/start');
     }
-  }, [status, router])
+  }, [status, router, session]);
 
   useEffect(() => {
     fetchTodaySchedule()

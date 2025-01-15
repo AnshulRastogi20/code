@@ -57,6 +57,20 @@ export async function POST(req: Request) {
     // Get or create class info for the user
     let classInfo = await ClassInfo.findOne({ userId: user._id })
     
+    // Check for existing entries for today
+    const hasExistingEntries = classInfo?.subject.some((subj: SubjectInfo) =>
+      subj.allclasses.some((cls: any) =>
+        new Date(cls.date).toDateString() === today.toDateString()
+      )
+    )
+
+    if (hasExistingEntries) {
+      return NextResponse.json({ 
+        error: 'Classes for today are already initialized',
+        isDateStarted: true
+      }, { status: 409 })
+    }
+
     if (!classInfo) {
       // Initialize new class info with subjects from today's schedule
       const initialSubjects: SubjectInfo[] = todaySchedule.periods.map((period:Period) => ({
@@ -85,7 +99,6 @@ export async function POST(req: Request) {
             cls.endTime === period.endTime
           );
 
-          // Add new class entry if not duplicate
           if (!isDuplicate) {
             subject.allclasses.push({
               date: todayUTC,
@@ -97,7 +110,6 @@ export async function POST(req: Request) {
               topicsCovered: []
             });
 
-            // Update class count if starting day
             if (action === 'startDay') {
               subject.allHappened = subject.allclasses.filter((cls:Period) => cls.happened).length;
             }
@@ -106,7 +118,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Save changes to database
     await classInfo?.save()
     return NextResponse.json({ success: true })
 

@@ -94,7 +94,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
         try {
             await signIn('google', {
                 redirect: true,
-                callbackUrl: '/',
+                callbackUrl: '/timetable',
             });
         } catch (error) {
             console.error('Error signing in:', error);

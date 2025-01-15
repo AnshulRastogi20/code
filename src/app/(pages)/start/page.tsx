@@ -37,44 +37,96 @@ export default function StartPage() {
   const { data: session, status, update: updateSession } = useSession()
   const [todayClasses, setTodayClasses] = useState<Period[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isHoliday, setIsHoliday] = useState(false)
 
   const today = new Date()
   const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()]
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(today)
 
+  // Memoize both the fetch function and navigation handling
+  const handleTimetableNotFound = () => {
+    toast.error('No timetable found. Please create one first.')
+    router.push('/timetable')
+  }
+
+  const fetchTodayClasses = async () => {
+    try {
+      const [timetableRes, classInfoRes] = await Promise.all([
+        axios.get('/api/user/timetable'),
+        axios.get('/api/calendar')
+      ])
+
+      if (!timetableRes.data || !timetableRes.data.schedule) {
+        setTodayClasses([])
+        setIsLoading(false)
+        handleTimetableNotFound()
+        return
+      }
+
+      const todaySchedule = timetableRes.data.schedule.find((day: DaySchedule) => 
+        day.day.toUpperCase() === dayName.toUpperCase()
+      )
+
+      // Check if today is marked as holiday
+      const todayDate = new Date()
+      todayDate.setHours(0, 0, 0, 0)
+      const todayClasses = classInfoRes.data.calendarData.filter(
+        (cls: any) => new Date(cls.date).toDateString() === todayDate.toDateString()
+      )
+      
+      setIsHoliday(todayClasses.length > 0 && todayClasses.every((cls: any) => cls.isHoliday))
+      setTodayClasses(todaySchedule?.periods || [])
+    } catch (error) {
+      console.error('Failed:', error)
+      setTodayClasses([])
+      if (axios.isAxiosError(error)) {
+        // Handle both 404 and 408 errors
+        if (error.response?.status === 404 || error.response?.status === 408) {
+          handleTimetableNotFound()
+        } else {
+          toast.error('Failed to load today\'s classes')
+        }
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Authentication effect
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/sign-in')
     }
-  }, [status, router,session])
+  }, [status, router])
 
+  // Data fetching effect with stable dependency
   useEffect(() => {
-    const fetchTodayClasses = async () => {
-      try {
-        const { data } = await axios.get('/api/user/timetable')
-        const todaySchedule = data.schedule.find((day: DaySchedule) => 
-          day.day.toUpperCase() === dayName.toUpperCase()
-        )
-        setTodayClasses(todaySchedule?.periods || [])
-      } catch (error) {
-        console.error('Failed:', error)
-        toast.error('Failed to load today\'s classes')
-      } finally {
-        setIsLoading(false)
-      }
+    const currentDayName = dayName // Capture current value
+    if (currentDayName) {
+      fetchTodayClasses()
     }
-
-    fetchTodayClasses()
-  }, [dayName])
+  }, []) // Empty dependency array since we capture dayName value
 
   const handleStartDay = async () => {
     try {
-      await axios.post('/api/start', { action: 'startDay' })
-        toast.success('Day started successfully')
-        router.push('/schedule')
+      // First make the API call
+      await axios.post('/api/start', { action: 'startDay' });
+      
+      // Then update the session and wait for it to complete
+      await updateSession({
+        user: {
+          ...session?.user,
+          isDateStarted: true,
+        }
+      });
+
+      // Only redirect after both operations are complete
+      toast.success('Day started successfully');
+      router.refresh(); // Add this to force a refresh
+      router.push('/schedule');
     } catch (error) {
-      console.error('Failed:', error)
-      toast.error('Failed to start day')
+      console.error('Failed:', error);
+      toast.error('Failed to start day');
     }
   }
 
@@ -186,31 +238,48 @@ export default function StartPage() {
               width: { xs: '100%', sm: 'auto' },
             }}
           >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleStartDay}
-              startIcon={<PlayArrow />}
-              sx={{
-                minWidth: { xs: '100%', sm: 200 },
-                py: 1.5,
-              }}
-            >
-              Start Today&apos;s Day
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              size="large"
-              onClick={handleMarkHoliday}
-              startIcon={<Cancel />}
-              sx={{
-                minWidth: { xs: '100%', sm: 200 },
-                py: 1.5,
-              }}
-            >
-              Mark as Holiday
-            </Button>
+            {isHoliday ? (
+              <Button
+                variant="contained"
+                size="large"
+                disabled
+                startIcon={<Cancel />}
+                sx={{
+                  minWidth: { xs: '100%', sm: 200 },
+                  py: 1.5,
+                }}
+              >
+                Today is marked as Holiday
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={handleStartDay}
+                  startIcon={<PlayArrow />}
+                  sx={{
+                    minWidth: { xs: '100%', sm: 200 },
+                    py: 1.5,
+                  }}
+                >
+                  Start Today&apos;s Day
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="large"
+                  onClick={handleMarkHoliday}
+                  startIcon={<Cancel />}
+                  sx={{
+                    minWidth: { xs: '100%', sm: 200 },
+                    py: 1.5,
+                  }}
+                >
+                  Mark as Holiday
+                </Button>
+              </>
+            )}
           </Box>
         </Box>
       </Container>

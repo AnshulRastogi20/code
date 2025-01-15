@@ -9,6 +9,7 @@ declare module 'next-auth' {
       name: string;
       image: string;
       isDateStarted: boolean;
+      lastReset: string | undefined
       googleId?: string;
     }& DefaultSession['user']
   }
@@ -19,6 +20,7 @@ declare module 'next-auth' {
     name: string;
     image: string;
     isDateStarted: boolean;
+    lastReset: string | undefined
     googleId: string;
   }
 } 
@@ -30,6 +32,7 @@ declare module 'next-auth/jwt'{
     name: string;
     image: string;
     isDateStarted: boolean;
+    lastReset: string | undefined
     googleId?: string;
   }
 }
