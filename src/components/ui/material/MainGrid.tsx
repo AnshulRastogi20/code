@@ -34,7 +34,6 @@ export default function MainGrid() {
   const totalClasses = subjects.reduce((acc, curr) => acc + curr.total, 0);
   const totalAttended = subjects.reduce((acc, curr) => acc + curr.attended, 0);
   const overallPercentage = (totalAttended / totalClasses) * 100;
-  const margin = targetPercentage < overallPercentage ? (overallPercentage-targetPercentage) : (overallPercentage-targetPercentage);
   const trend = targetPercentage < overallPercentage ? 'up' : (targetPercentage > overallPercentage ?'down' : 'neutral');
   if (loading) return (
       <AppTheme>

@@ -58,9 +58,12 @@ export const navigationCustomizations: Components<Theme> = {
   },
   MuiSelect: {
     defaultProps: {
-      IconComponent: React.forwardRef<SVGSVGElement, SvgIconProps>((props, ref) => (
-        <UnfoldMoreRoundedIcon fontSize="small" {...props} ref={ref} />
-      )),
+      IconComponent: Object.assign(
+        React.forwardRef<SVGSVGElement, SvgIconProps>((props, ref) => (
+          <UnfoldMoreRoundedIcon fontSize="small" {...props} ref={ref} />
+        )),
+        { displayName: 'SelectIconComponent' }
+      ),
     },
     styleOverrides: {
       root: ({ theme }) => ({
@@ -277,3 +280,12 @@ export const navigationCustomizations: Components<Theme> = {
     },
   },
 };
+
+// Add this after the navigationCustomizations object
+const selectIcon = navigationCustomizations.MuiSelect?.defaultProps?.IconComponent;
+if (selectIcon) {
+  (selectIcon as React.ForwardRefExoticComponent<SvgIconProps & { ref?: React.Ref<SVGSVGElement> }>).displayName = 'SelectIcon';
+}
+Navigation.displayName = "Navigation";
+
+export default Navigation;

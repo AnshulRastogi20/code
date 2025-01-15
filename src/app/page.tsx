@@ -2,15 +2,10 @@
 
 import * as React from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
 import Hero from '@/components/ui/material/Hero';
 // import LogoCollection from '@/components/ui/material/LogoCollection';
-// import Highlights from '@/components/ui/material/Highlights';
-import Pricing from '@/components/ui/material/Pricing';
-import Features from '@/components/ui/material/Features';
-// import Testimonials from '@/components/ui/material/Testimonials';
-import FAQ from '@/components/ui/material/FAQ';
-import Footer from '@/components/ui/material/Footer';
+
+
 import AppTheme from '@/components/shared-theme/AppTheme';
 import ColorModeSelect from '@/components/shared-theme/ColorModeSelect';
 import { useSession } from 'next-auth/react';
@@ -37,7 +32,7 @@ export default function Home() {
         
         {/* <Features />
         <Divider />
-        <Pricing />
+        <Pricing /
         <Divider />
         <FAQ />
         <Divider />

@@ -394,7 +394,7 @@ export const shape = {
   borderRadius: 8,
 };
 
-// @ts-expect-error
+// @ts-expect-error - MUI's type definition for shadows array doesn't match our custom implementation with CSS variables
 const defaultShadows: Shadows = [
   'none',
   'var(--template-palette-baseShadow)',

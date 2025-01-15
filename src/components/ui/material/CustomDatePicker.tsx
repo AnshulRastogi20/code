@@ -11,6 +11,7 @@ import {
   DateValidationError,
   FieldSection,
 } from '@mui/x-date-pickers/models';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface ButtonFieldProps
   extends UseDateFieldProps<Dayjs, false>,

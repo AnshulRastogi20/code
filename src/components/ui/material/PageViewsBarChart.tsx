@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useTheme } from '@mui/material/styles';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default function PageViewsBarChart() {
   const theme = useTheme();

@@ -4,6 +4,7 @@ import Chip from '@mui/material/Chip';
 import { GridCellParams, GridColDef } from '@mui/x-data-grid';
 
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 
 function renderStatus(status: 'Enough' | 'Low') {

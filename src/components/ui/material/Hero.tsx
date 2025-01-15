@@ -2,11 +2,9 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
-import { styled } from '@mui/material/styles';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -146,11 +144,10 @@ export default function Hero() {
               color="darkmagenta"
               onClick={() => {
 
-                {
-                  (session?.user) && router.push('/schedule');
-                }
-                {
-                  (!session?.user) && router.push('/auth/sign-in');
+                if(session?.user) {
+                  router.push('/schedule');
+                } else{
+                  router.push('/auth/sign-in')
                 }
 
                 // const pricingSection = document.getElementById('pricing');

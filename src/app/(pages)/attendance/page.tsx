@@ -1,4 +1,5 @@
 'use client'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
@@ -6,7 +7,6 @@ import { toast } from 'react-hot-toast'
 import {
   CircularProgress,
   Box,
-  useTheme,
   Card
 } from '@mui/material'
 import AppTheme from '@/components/shared-theme/AppTheme'
@@ -44,10 +44,20 @@ interface SubjectAttendance {
 
 export default function AttendancePage() {
   const { status } = useSession();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [subjects, setSubjects] = useState<SubjectAttendance[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [fromDate, setFromDate] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [tillDate, setTillDate] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [showAll, setShowAll] = useState(true);
 
   const fetchAttendance = useCallback(async () => {
@@ -65,7 +75,7 @@ export default function AttendancePage() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, tillDate, showAll, subjects,setFromDate,setTillDate,setShowAll]);
+  }, [fromDate, tillDate, showAll]);
 
   useEffect(() => {
     if (status === 'authenticated') {
