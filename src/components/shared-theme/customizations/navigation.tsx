@@ -286,6 +286,3 @@ const selectIcon = navigationCustomizations.MuiSelect?.defaultProps?.IconCompone
 if (selectIcon) {
   (selectIcon as React.ForwardRefExoticComponent<SvgIconProps & { ref?: React.Ref<SVGSVGElement> }>).displayName = 'SelectIcon';
 }
-Navigation.displayName = "Navigation";
-
-export default Navigation;
