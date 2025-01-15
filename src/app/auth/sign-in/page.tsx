@@ -11,7 +11,7 @@ import AppTheme from '@/components/shared-theme/AppTheme'
 import ColorModeSelect from '@/components/shared-theme/ColorModeSelect';
 import { SvgIcon } from '@mui/material';
 import { signIn } from 'next-auth/react';
-export function GoogleIcon() {
+function GoogleIcon() {
     return (
       <SvgIcon>
         <svg
