@@ -81,7 +81,7 @@ export default function Navbar() {
             sx={{ flexGrow: 1, display: "flex", alignItems: "center", px: 0 }}
           >
             {/* //LOGO HERE */}
-            MarkIT
+            AttendIT
             <Box sx={{ display: { xs: "none", md: "flex" } }}>
               {!user && (
               <Link href="/">

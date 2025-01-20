@@ -17,7 +17,7 @@ function Copyright() {
     <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
       {'Copyright © '}
       <Link color="text.secondary" href="/">
-        MarkIT
+        AttendIT
       </Link>
       &nbsp;
       {new Date().getFullYear()}
@@ -54,7 +54,7 @@ export default function Footer() {
           }}
         >
           <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
-            MarkIT
+            AttendIT
             <Typography variant="body2" gutterBottom sx={{ fontWeight: 600, mt: 2 }}>
               Join the newsletter
             </Typography>

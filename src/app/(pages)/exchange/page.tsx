@@ -443,10 +443,15 @@ export default function ExchangePage() {
               >
                 {loadingStates.exchange ? (
                   <CircularProgress
-                    size={24}
-                    color="inherit"
-                    sx={{ my: { xs: 0.5, sm: 0 } }}
-                  />
+                  size={24}
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    marginTop: '-12px',
+                    marginLeft: '-12px',
+                  }}
+                />
                 ) : (
                   "Exchange Periods"
                 )}

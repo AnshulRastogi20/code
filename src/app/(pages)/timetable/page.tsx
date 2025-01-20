@@ -247,7 +247,16 @@ export default function TimetablePage() {
                     sx={{ mt: 1 }}
                   >
                     {loadingStates.applyPreset ? (
-                      <CircularProgress size={24} color="inherit" />
+                      <CircularProgress
+                      size={24}
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        marginTop: '-12px',
+                        marginLeft: '-12px',
+                      }}
+                    />
                     ) : (
                       "Apply Preset"
                     )}

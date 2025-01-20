@@ -270,7 +270,16 @@ export default function StartPage() {
                   variant="contained"
                   size="large"
                   onClick={handleStartDay}
-                  startIcon={loadingStates.startDay ? <CircularProgress size={20} /> : <PlayArrow />}
+                  startIcon={loadingStates.startDay ? <CircularProgress
+                    size={24}
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      marginTop: '-12px',
+                      marginLeft: '-12px',
+                    }}
+                  /> : <PlayArrow />}
                   disabled={loadingStates.startDay}
                   sx={{
                     minWidth: { xs: '100%', sm: 200 },
@@ -284,7 +293,16 @@ export default function StartPage() {
                   color="error"
                   size="large"
                   onClick={handleMarkHoliday}
-                  startIcon={loadingStates.markHoliday ? <CircularProgress size={20} /> : <Cancel />}
+                  startIcon={loadingStates.markHoliday ? <CircularProgress
+                    size={24}
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      marginTop: '-12px',
+                      marginLeft: '-12px',
+                    }}
+                  /> : <Cancel />}
                   disabled={loadingStates.markHoliday}
                   sx={{
                     minWidth: { xs: '100%', sm: 200 },
