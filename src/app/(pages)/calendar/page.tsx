@@ -59,7 +59,7 @@ export default function CalendarPage() {
 
     useEffect(() => {
         fetchCalendarData();
-    }); // Empty dependency array since fetchCalendarData is defined inside component
+    }, [selectedDate]); // Add selectedDate as a dependency
 
     const fetchCalendarData = useCallback(async () => {
         try {
@@ -68,7 +68,7 @@ export default function CalendarPage() {
         } catch (error) {
             console.error('Failed to fetch calendar data:', error);
         }
-    }, []); // Empty dependency array since this function doesn't depend on any props or state
+    }, []); 
 
     const markHoliday = async (date: Date) => {
         try {
@@ -372,6 +372,8 @@ export default function CalendarPage() {
                         </Grid>
 
                         {/* Chart Grid */}
+
+                        {/* 
                         <Grid item xs={12} md={5}>
                         <Card
                                 variant= 'outlined'
@@ -382,9 +384,12 @@ export default function CalendarPage() {
 
                                 }}
                             >
-                                {/* <PageViewsBarChart /> */}
+                                <PageViewsBarChart /> 
                         </Card>
                         </Grid>
+
+                        */}
+
                     </Grid>
 
                     {/* Schedule Section */}

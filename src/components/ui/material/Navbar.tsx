@@ -176,22 +176,55 @@ export default function Navbar() {
                   </IconButton>
                 </Box>
 
-                <MenuItem>Home</MenuItem>
-                <MenuItem>Schedule</MenuItem>
-                <MenuItem>Attendence</MenuItem>
-                <MenuItem>Calendar</MenuItem>
+                {!user && (
+                  <Link href="/">
+                    <MenuItem onClick={toggleDrawer(false)}>Home</MenuItem>
+                  </Link>
+                )}
+                <Link href="/schedule">
+                  <MenuItem onClick={toggleDrawer(false)}>Schedule</MenuItem>
+                </Link>
+                <Link href="/attendance">
+                  <MenuItem onClick={toggleDrawer(false)}>Attendance</MenuItem>
+                </Link>
+                <Link href="/calendar">
+                  <MenuItem onClick={toggleDrawer(false)}>Calendar</MenuItem>
+                </Link>
+                <Link href="/timetable">
+                  <MenuItem onClick={toggleDrawer(false)}>Timetable</MenuItem>
+                </Link>
 
                 <Divider sx={{ my: 3 }} />
-                <MenuItem>
-                  <Button color="primary" variant="contained" fullWidth>
-                    Sign up
-                  </Button>
-                </MenuItem>
-                <MenuItem>
-                  <Button color="primary" variant="outlined" fullWidth>
-                    Sign in
-                  </Button>
-                </MenuItem>
+                
+                {!user ? (
+                  <MenuItem>
+                    <Button
+                      color="primary"
+                      variant="contained"
+                      fullWidth
+                      onClick={() => {
+                        router.push('/auth/sign-in');
+                        setOpen(false);
+                      }}
+                    >
+                      Sign in
+                    </Button>
+                  </MenuItem>
+                ) : (
+                  <MenuItem>
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => {
+                        signOut();
+                        setOpen(false);
+                      }}
+                    >
+                      Sign out
+                    </Button>
+                  </MenuItem>
+                )}
               </Box>
             </Drawer>
           </Box>
