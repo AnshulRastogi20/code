@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { createTheme, alpha, PaletteMode, Shadows } from '@mui/material/styles';
 
 declare module '@mui/material/Paper' {
