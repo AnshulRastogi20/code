@@ -88,7 +88,7 @@ function GoogleIcon() {
 
 
 
-export function SignIn(props: { disableCustomTheme?: boolean }) {
+export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
     const handleGoogleSignIn = async () => {
         try {
