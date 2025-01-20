@@ -88,7 +88,7 @@ function GoogleIcon() {
 
 
 
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
+export default function SignIn() {
 
     const handleGoogleSignIn = async () => {
         try {
@@ -102,7 +102,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     };
 
     return (
-        <AppTheme {...props}>
+        <AppTheme>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="space-between">
         <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
