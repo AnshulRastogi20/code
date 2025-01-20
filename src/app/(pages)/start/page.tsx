@@ -37,6 +37,10 @@ export default function StartPage() {
   const [todayClasses, setTodayClasses] = useState<Period[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isHoliday, setIsHoliday] = useState(false)
+  const [loadingStates, setLoadingStates] = useState({
+    startDay: false,
+    markHoliday: false
+  });
 
   const today = new Date()
   const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today.getDay()]
@@ -107,6 +111,9 @@ export default function StartPage() {
   }) // Empty dependency array since we capture dayName value
 
   const handleStartDay = async () => {
+    if (loadingStates.startDay) return;
+    setLoadingStates(prev => ({ ...prev, startDay: true }));
+    
     try {
       // First make the API call
       await axios.post('/api/start', { action: 'startDay' });
@@ -126,10 +133,15 @@ export default function StartPage() {
     } catch (error) {
       console.error('Failed:', error);
       toast.error('Failed to start day');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, startDay: false }));
     }
   }
 
   const handleMarkHoliday = async () => {
+    if (loadingStates.markHoliday) return;
+    setLoadingStates(prev => ({ ...prev, markHoliday: true }));
+    
     try {
       await axios.post('/api/start', { action: 'markHoliday' })
       toast.success('Day marked as holiday')
@@ -137,6 +149,8 @@ export default function StartPage() {
     } catch (error) {
       console.error('Failed:', error)
       toast.error('Failed to mark holiday')
+    } finally {
+      setLoadingStates(prev => ({ ...prev, markHoliday: false }));
     }
   }
 
@@ -256,7 +270,8 @@ export default function StartPage() {
                   variant="contained"
                   size="large"
                   onClick={handleStartDay}
-                  startIcon={<PlayArrow />}
+                  startIcon={loadingStates.startDay ? <CircularProgress size={20} /> : <PlayArrow />}
+                  disabled={loadingStates.startDay}
                   sx={{
                     minWidth: { xs: '100%', sm: 200 },
                     py: 1.5,
@@ -269,7 +284,8 @@ export default function StartPage() {
                   color="error"
                   size="large"
                   onClick={handleMarkHoliday}
-                  startIcon={<Cancel />}
+                  startIcon={loadingStates.markHoliday ? <CircularProgress size={20} /> : <Cancel />}
+                  disabled={loadingStates.markHoliday}
                   sx={{
                     minWidth: { xs: '100%', sm: 200 },
                     py: 1.5,

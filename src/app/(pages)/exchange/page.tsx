@@ -70,6 +70,9 @@ export default function ExchangePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [loadingStates, setLoadingStates] = useState({
+    exchange: false
+  });
 
   useEffect(() => {
     const fetchTimetable = async () => {
@@ -90,8 +93,12 @@ export default function ExchangePage() {
   }, [session]);
 
   const handleExchange = async () => {
+    if (loadingStates.exchange) return;
+    setLoadingStates(prev => ({ ...prev, exchange: true }));
+
     if (!firstPeriod.day || !secondPeriod.day) {
       setError("Please select both periods");
+      setLoadingStates(prev => ({ ...prev, exchange: false }));
       return;
     }
 
@@ -126,6 +133,7 @@ export default function ExchangePage() {
       toast.error("Failed to exchange periods");
     } finally {
       setLoading(false);
+      setLoadingStates(prev => ({ ...prev, exchange: false }));
     }
   };
 
@@ -421,7 +429,7 @@ export default function ExchangePage() {
                 variant="contained"
                 size="large"
                 onClick={handleExchange}
-                disabled={loading}
+                disabled={loading || loadingStates.exchange}
                 sx={{
                   py: { xs: 1.5, sm: 2 },
                   fontSize: { xs: "0.875rem", sm: "1rem" },
@@ -433,7 +441,7 @@ export default function ExchangePage() {
                   },
                 }}
               >
-                {loading ? (
+                {loadingStates.exchange ? (
                   <CircularProgress
                     size={24}
                     color="inherit"

@@ -24,6 +24,7 @@ import {
   Typography,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from '@mui/material'
 import { PresetCreationDrawer } from "@/components/PresetCreationDrawer"
 import {
@@ -43,6 +44,9 @@ export default function TimetablePage() {
   const [currentPreset, setCurrentPreset] = useState<Preset | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingPresetId, setPendingPresetId] = useState<string | null>(null);
+  const [loadingStates, setLoadingStates] = useState({
+    applyPreset: false
+  });
   const router = useRouter()
   const { applyPreset } = useTimetable()
   const { data: session } = useSession()
@@ -97,17 +101,19 @@ export default function TimetablePage() {
   };
 
   const handleApplyPreset = async (presetId: string) => {
+    if (loadingStates.applyPreset) return;
+
     if (currentPreset) {
       setShowConfirmDialog(true);
       setPendingPresetId(presetId);
       return;
     }
     
-    // If no current preset, proceed directly
     await applyPresetChanges(presetId);
   };
 
   const applyPresetChanges = async (presetId: string) => {
+    setLoadingStates(prev => ({ ...prev, applyPreset: true }));
     try {
       if (currentPreset) {
         await axios.delete('/api/classinfo');
@@ -121,6 +127,8 @@ export default function TimetablePage() {
     } catch (error) {
       console.error('Failed to apply preset:', error);
       toast.error('Failed to update timetable');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, applyPreset: false }));
     }
   };
 
@@ -235,10 +243,14 @@ export default function TimetablePage() {
                     color="primary"
                     fullWidth
                     onClick={() => handleApplyPreset(selectedPreset)}
-                    disabled={!selectedPreset}
+                    disabled={!selectedPreset || loadingStates.applyPreset}
                     sx={{ mt: 1 }}
                   >
-                    Apply Preset
+                    {loadingStates.applyPreset ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "Apply Preset"
+                    )}
                   </Button>
                 )}
             </Card>
