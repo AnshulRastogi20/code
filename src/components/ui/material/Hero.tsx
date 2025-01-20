@@ -141,7 +141,7 @@ export default function Hero() {
             /> */}
             <Button
               variant="contained"
-              color="darkmagenta"
+              color="success"
               onClick={() => {
 
                 if(session?.user) {
